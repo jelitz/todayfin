@@ -100,6 +100,17 @@
 
 신규 컴포넌트: `Modal.tsx`(ESC·배경클릭·body 스크롤 잠금). `App.tsx`는 Home을 상시 마운트하고 route가 detail일 때만 Modal 안에 Detail을 추가로 렌더하는 구조로 재구성.
 
+## 사용자 피드백 반영 2차 (2026-08-03, MVP 배포 후 2차 리뷰)
+
+1. **파비콘 교체**: Vite 기본 로고(보라색 추상 이미지, todayfin과 무관)를 흑백 미니멀 상승추세 아이콘(검정 배경 + 흰색 꺾은선 + 끝점)으로 교체.
+2. **MA 20/60/120일 통일**: 과거 usdkrw/usdjpy=20/60일, wti=60일, ust10y/ktb3y=MA 없음으로 제각각이던 것을 flows를 제외한 전 지표(ohlcv+line)에 동일하게 통일. `Detail.tsx`의 `OHLCV_MA_PERIODS`/`LINE_MA_PERIODS` 이원 관리를 `MA_PERIODS` 단일 상수 + `maChecked` 단일 state로 리팩토링.
+3. **수급 카드 등락 표시 변경**: flows(수급) 지표는 유량 데이터라 전일 대비 %가 오도(부호 반전 시 극단값)하는 문제 확인 — `collect.py`의 `build_summary()`에서 flows 타입은 `change_pct` 대신 `change_abs`(절대 증감액)를 계산하도록 분기. 프론트 `formatChangeAbs()` 신설, `IndicatorCard`·`TickerBar` 모두 타입별로 %와 절대액을 구분 표시.
+4. **국고채 3년**: 코드는 이미 완비(indicators.py/ecos.py/프론트 전부)되어 있으나 `ECOS_API_KEY` 미등록으로 데이터 파일 자체가 없어 홈 화면에서 조용히 제외되던 상태였음 — 사용자에게 "이미 구현됨, 키만 등록하면 즉시 표시"로 안내. KOFIA 채권정보센터(금투협) 대안도 조사했으나(API는 살아있음, 200 응답) 정확한 POST 파라미터 재현에 추가 검증이 필요해 이번엔 보류 — 잘못된 데이터를 보여줄 리스크가 ECOS 대기보다 크다고 판단.
+5. **미국채 2년·30년 추가**: 이미 쓰고 있던 미 재무부 CSV에 `2 Yr`·`30 Yr` 컬럼이 함께 있음을 실응답으로 확인(`treasury.py`의 컬럼 매칭을 indicator_id 파라미터화). `fred.py`도 series_id를 DGS2/DGS10/DGS30으로 매핑해 동일-정의 폴백 유지. 5년 백필 신규 실행, 값 검증(2년 4.28% < 10년 4.75% < 30년 5.27% — 정상 우상향 수익률 곡선).
+6. **상단 실시간 티커 바**: `TickerBar.tsx` 신설 — 헤더 바로 아래 얇은 바에 전 지표를 CSS `@keyframes`로 우→좌 무한 스크롤(두 벌 복제 + `translateX(-50%)`). 실시간이 아니므로 좌측에 데이터 기준 시각(KST) 고정 표시, hover 시 정지, `prefers-reduced-motion` 대응, 클릭 시 카드와 동일하게 모달 오픈.
+
+공용 리팩토링: `App.tsx`에 중복 정의됐던 KST 시각 포맷터를 `lib/format.ts`의 `formatDateTimeKST()`로 이동해 `TickerBar`와 공유.
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증

@@ -21,14 +21,8 @@ const PERIOD_PRESETS: { key: PeriodKey; label: string; days: number }[] = [
   { key: '5Y', label: '5Y', days: 365 * 5 },
 ]
 
-const OHLCV_MA_PERIODS = [20, 60, 120] as const
-
-/** line 타입 지표 중 MA를 제공하는 지표와 그 기간 (requirements.md R1). ust10y·ktb3y는 MA 없음("—"). */
-const LINE_MA_PERIODS: Record<string, readonly number[]> = {
-  wti: [60],
-  usdkrw: [20, 60],
-  usdjpy: [20, 60],
-}
+/** ohlcv·line 전 지표 공통 MA 기간 (사용자 피드백 2026-08-03: 일부 지표만 MA가 있던 것을 통일). */
+const MA_PERIODS = [20, 60, 120] as const
 
 /** requirements.md R1: 캔들+거래량이 필요한 지표(코스피/코스닥은 캔들만). */
 const VOLUME_INDICATOR_IDS = new Set(['samsung', 'skhynix'])
@@ -72,9 +66,7 @@ function filterByDays(series: SeriesRow[], days: number): SeriesRow[] {
   return series.filter((row) => row[0] >= cutoffStr)
 }
 
-function initLineMa(id: string): Record<number, boolean> {
-  return Object.fromEntries((LINE_MA_PERIODS[id] ?? []).map((p) => [p, true]))
-}
+const INITIAL_MA_CHECKED: Record<number, boolean> = Object.fromEntries(MA_PERIODS.map((p) => [p, true]))
 
 export default function Detail({ id, onBack }: DetailProps): JSX.Element {
   const [record, setRecord] = useState<IndicatorRecord | null>(null)
@@ -83,8 +75,7 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
   const [reloadKey, setReloadKey] = useState(0)
 
   const [period, setPeriod] = useState<PeriodKey>('1Y')
-  const [ohlcvMa, setOhlcvMa] = useState<Record<number, boolean>>({ 20: true, 60: true, 120: true })
-  const [lineMa, setLineMa] = useState<Record<number, boolean>>(() => initLineMa(id))
+  const [maChecked, setMaChecked] = useState<Record<number, boolean>>(INITIAL_MA_CHECKED)
   const [flowsWeekly, setFlowsWeekly] = useState(true)
 
   useEffect(() => {
@@ -94,8 +85,7 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
     setError(false)
     setRecord(null)
     setPeriod('1Y')
-    setOhlcvMa({ 20: true, 60: true, 120: true })
-    setLineMa(initLineMa(id))
+    setMaChecked(INITIAL_MA_CHECKED)
     setFlowsWeekly(true)
 
     fetch(`${import.meta.env.BASE_URL}data/${id}.json`)
@@ -126,13 +116,13 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
     () => (record ? filterByDays(record.series, periodDays) : []),
     [record, periodDays],
   )
-  const lineMaPeriods = LINE_MA_PERIODS[id] ?? []
   const maPeriods = useMemo<number[]>(() => {
     if (!record) return []
-    if (record.type === 'ohlcv') return OHLCV_MA_PERIODS.filter((p) => ohlcvMa[p])
-    if (record.type === 'line') return lineMaPeriods.filter((p) => lineMa[p])
+    if (record.type === 'ohlcv' || record.type === 'line') {
+      return MA_PERIODS.filter((p) => maChecked[p])
+    }
     return []
-  }, [record, ohlcvMa, lineMa, lineMaPeriods])
+  }, [record, maChecked])
 
   if (loading) {
     return (
@@ -202,32 +192,16 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
           ))}
         </div>
 
-        {record.type === 'ohlcv' && (
+        {(record.type === 'ohlcv' || record.type === 'line') && (
           <div className="detail-ma-group" role="group" aria-label="이동평균선">
-            {OHLCV_MA_PERIODS.map((p) => (
+            {MA_PERIODS.map((p) => (
               <label key={p} className="detail-ma-option">
                 <input
                   type="checkbox"
-                  checked={ohlcvMa[p]}
-                  onChange={() => setOhlcvMa((prev) => ({ ...prev, [p]: !prev[p] }))}
+                  checked={maChecked[p]}
+                  onChange={() => setMaChecked((prev) => ({ ...prev, [p]: !prev[p] }))}
                 />
                 <span className={`detail-ma-dot detail-ma-dot-${MA_COLOR_KEY[p]}`} />
-                {p}일
-              </label>
-            ))}
-          </div>
-        )}
-
-        {record.type === 'line' && lineMaPeriods.length > 0 && (
-          <div className="detail-ma-group" role="group" aria-label="이동평균선">
-            {lineMaPeriods.map((p) => (
-              <label key={p} className="detail-ma-option">
-                <input
-                  type="checkbox"
-                  checked={lineMa[p]}
-                  onChange={() => setLineMa((prev) => ({ ...prev, [p]: !prev[p] }))}
-                />
-                <span className={`detail-ma-dot detail-ma-dot-${MA_COLOR_KEY[p] ?? 1}`} />
                 {p}일
               </label>
             ))}

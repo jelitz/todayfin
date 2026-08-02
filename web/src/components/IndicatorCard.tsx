@@ -1,6 +1,6 @@
 import type { JSX } from 'react'
 import type { SummaryIndicator } from '../types'
-import { formatValue, formatPct, formatDate } from '../lib/format'
+import { formatValue, formatPct, formatChangeAbs, formatDate } from '../lib/format'
 import { daysSince } from '../lib/stale'
 import './IndicatorCard.css'
 
@@ -39,10 +39,13 @@ function Sparkline({ values }: { values: number[] }): JSX.Element | null {
 }
 
 export default function IndicatorCard({ indicator, onClick }: IndicatorCardProps): JSX.Element {
-  const { id, name, latest, unit, change_pct, spark, observed_last, stale } = indicator
+  const { id, name, latest, unit, type, change_pct, change_abs, spark, observed_last, stale } = indicator
 
-  const changeClass = change_pct == null || change_pct === 0 ? 'muted' : change_pct > 0 ? 'up' : 'down'
-  const arrow = change_pct == null || change_pct === 0 ? '' : change_pct > 0 ? '▲' : '▼'
+  // flows(수급)는 유량 데이터라 %가 아니라 전일 대비 절대 증감액으로 표시(사용자 피드백 2026-08-03)
+  const change = type === 'flows' ? change_abs : change_pct
+  const changeText = type === 'flows' ? formatChangeAbs(change_abs, unit) : formatPct(change_pct)
+  const changeClass = change == null || change === 0 ? 'muted' : change > 0 ? 'up' : 'down'
+  const arrow = change == null || change === 0 ? '' : change > 0 ? '▲' : '▼'
 
   const handleActivate = () => onClick(id)
 
@@ -66,7 +69,7 @@ export default function IndicatorCard({ indicator, onClick }: IndicatorCardProps
       <div className="indicator-card-value">{latest === null ? '—' : formatValue(latest, unit)}</div>
       <div className={`indicator-card-change ${changeClass}`}>
         {arrow ? `${arrow} ` : ''}
-        {formatPct(change_pct)}
+        {changeText}
       </div>
       <Sparkline values={spark} />
       <div className="indicator-card-footer">

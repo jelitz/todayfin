@@ -4,6 +4,8 @@ import Home from './components/Home'
 import Detail from './components/Detail'
 import Modal from './components/Modal'
 import ErrorBoundary from './components/ErrorBoundary'
+import TickerBar from './components/TickerBar'
+import { formatDateTimeKST } from './lib/format'
 import './App.css'
 
 /** 현재 hash("#/", "#/i/{id}" 등)를 파싱해 라우트를 계산한다. */
@@ -22,23 +24,6 @@ function parseHash(hash: string): Route {
     return { name: 'detail', id }
   }
   return { name: 'home' }
-}
-
-/** "2026-08-02T16:06:33.887335+00:00" 같은 ISO 문자열을 "YYYY.MM.DD HH:MM" (KST)로 포맷한다. */
-function formatGeneratedAt(iso: string): string {
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return iso
-  const parts = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date)
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ''
-  return `${get('year')}.${get('month')}.${get('day')} ${get('hour')}:${get('minute')}`
 }
 
 export default function App() {
@@ -77,9 +62,16 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-inner">
           <span className="app-logo">todayfin</span>
-          {summary && <span className="app-updated muted">마지막 갱신: {formatGeneratedAt(summary.generated_at)}</span>}
+          {summary && <span className="app-updated muted">마지막 갱신: {formatDateTimeKST(summary.generated_at)}</span>}
         </div>
       </header>
+
+      <TickerBar
+        summary={summary}
+        onSelect={(id) => {
+          window.location.hash = `#/i/${id}`
+        }}
+      />
 
       <main className="app-main">
         <ErrorBoundary key="home">

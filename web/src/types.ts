@@ -39,7 +39,10 @@ export interface SummaryIndicator {
   type: IndicatorType;
   latest: number | null;
   prev: number | null;
+  /** flows 타입 외 전 지표에서 사용하는 전일 대비 등락률(%) */
   change_pct: number | null;
+  /** flows 타입(수급) 전용 — 전일 대비 절대 증감액(억원). %는 플로우 데이터에 의미가 없어 대체 지표로 사용 */
+  change_abs: number | null;
   observed_last: string | null;
   stale: boolean;
   /** 최근 3개월 대표값(ohlcv=close, flows=foreign, line=value) 시계열 — 스파크라인용 */
@@ -65,6 +68,6 @@ export interface Meta {
 export const SECTIONS: { title: string; ids: string[] }[] = [
   { title: "수급", ids: ["investor_kospi", "investor_kosdaq"] },
   { title: "시장 가격·추세", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
-  { title: "거시·통화", ids: ["usdkrw", "usdjpy", "ust10y", "ktb3y"] },
+  { title: "거시·통화", ids: ["usdkrw", "usdjpy", "ust2y", "ust10y", "ust30y", "ktb3y"] },
   { title: "원자재", ids: ["wti"] },
 ];

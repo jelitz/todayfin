@@ -199,9 +199,14 @@ def build_summary(data_dir: str) -> dict:
 
         latest = series[-1][idx]
         prev = series[-2][idx] if len(series) >= 2 else None
-        change_pct = (
-            round((latest - prev) / prev * 100, 2) if prev not in (None, 0) else None
-        )
+        # flows(수급)는 유량 데이터라 %가 의미 없음(전일값 부호 반전 시 극단값 발생) — 절대 증감액을 대신 씀
+        change_pct = None
+        change_abs = None
+        if prev is not None:
+            if spec["type"] == "flows":
+                change_abs = round(latest - prev, 2)
+            elif prev != 0:
+                change_pct = round((latest - prev) / prev * 100, 2)
         out.append(
             {
                 "id": indicator_id,
@@ -211,6 +216,7 @@ def build_summary(data_dir: str) -> dict:
                 "latest": latest,
                 "prev": prev,
                 "change_pct": change_pct,
+                "change_abs": change_abs,
                 "observed_last": rec.get("observed_last"),
                 "stale": _is_stale(rec.get("observed_last"), today),
                 "spark": [row[idx] for row in spark_series],

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatPct, formatValue } from './format';
+import { formatChangeAbs, formatDate, formatPct, formatValue } from './format';
 
 describe('formatValue', () => {
   it('formats 억원 under 10000 with comma and sign', () => {
@@ -64,6 +64,24 @@ describe('formatPct', () => {
 
   it('always shows 2 decimal places', () => {
     expect(formatPct(5)).toBe('+5.00%');
+  });
+});
+
+describe('formatChangeAbs', () => {
+  it('returns "-" for null', () => {
+    expect(formatChangeAbs(null, '억원')).toBe('-');
+  });
+
+  it('adds a leading + for positive values', () => {
+    expect(formatChangeAbs(59130, '억원')).toBe('+5.9조원');
+  });
+
+  it('keeps the leading - for negative values (formatValue already includes it)', () => {
+    expect(formatChangeAbs(-1234, '억원')).toBe('-1,234억원');
+  });
+
+  it('formats zero without a sign', () => {
+    expect(formatChangeAbs(0, '억원')).toBe('0억원');
   });
 });
 

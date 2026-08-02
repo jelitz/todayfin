@@ -43,7 +43,35 @@ export function formatPct(pct: number | null): string {
   return `${sign}${pct.toFixed(2)}%`;
 }
 
+/**
+ * 절대 증감액을 항상 부호를 붙여 포맷한다(flows/수급 카드 전용 — 유량 데이터는 %가 의미 없어
+ * "전일 대비 몇 억원" 형태로 표시). null이면 "-".
+ */
+export function formatChangeAbs(value: number | null, unit: string): string {
+  if (value === null) return '-';
+  if (value === 0) return `0${unit === '억원' ? '억원' : unit}`;
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${formatValue(value, unit)}`;
+}
+
 /** "YYYY-MM-DD" -> "YYYY.MM.DD" */
 export function formatDate(iso: string): string {
   return iso.replace(/-/g, '.');
+}
+
+/** ISO 문자열(UTC)을 "YYYY.MM.DD HH:MM" (KST)로 포맷한다. */
+export function formatDateTimeKST(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${get('year')}.${get('month')}.${get('day')} ${get('hour')}:${get('minute')}`;
 }
