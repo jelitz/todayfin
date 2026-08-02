@@ -5,8 +5,8 @@
 }
 
 .app-header {
-  background: var(--canvas);
-  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-dark);
+  border-bottom: 1px solid var(--surface-dark);
 }
 
 .app-header-inner {
@@ -29,12 +29,13 @@
 .app-logo {
   font-size: var(--fs-heading-sm);
   font-weight: 700;
-  color: var(--ink);
+  color: var(--on-dark);
   letter-spacing: -0.01em;
 }
 
 .app-updated {
   font-size: var(--fs-caption-sm);
+  color: var(--on-dark-mute);
   white-space: nowrap;
 }
 
@@ -64,13 +65,24 @@
 }
 
 .app-disclaimer,
-.app-sources {
+.app-sources,
+.app-credit {
   font-size: var(--fs-caption-sm);
   line-height: 1.6;
   margin: 0;
   color: var(--ink-body);
 }
 
-.app-sources {
+.app-sources,
+.app-credit {
   color: var(--ink-muted);
+}
+
+.app-credit a {
+  color: var(--ink-body);
+  text-decoration: none;
+}
+
+.app-credit a:hover {
+  text-decoration: underline;
 }

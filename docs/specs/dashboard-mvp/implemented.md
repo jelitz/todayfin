@@ -111,6 +111,15 @@
 
 공용 리팩토링: `App.tsx`에 중복 정의됐던 KST 시각 포맷터를 `lib/format.ts`의 `formatDateTimeKST()`로 이동해 `TickerBar`와 공유.
 
+## 사용자 피드백 반영 3차 (2026-08-03, MVP 배포 후 3차 리뷰)
+
+1. **티커 바 제거(보류)**: 2차 피드백에서 만든 `TickerBar.tsx`/`TickerBar.css`를 "나중에 추가"하기로 해 `App.tsx`의 렌더링·임포트를 제거하고 컴포넌트 파일 자체를 삭제. 코드는 커밋 `a7789d7`(2차 반영) 히스토리에 남아 있어 필요 시 `git show a7789d7:web/src/components/TickerBar.tsx` 등으로 복원 가능. 재도입 시점은 2단계 로드맵으로 재분류(`requirements.md` 정책 노트 참고).
+2. **헤더 배경 구분**: `.app-header` 배경을 `--canvas`(흰색)에서 `--surface-dark`(`#171717`)로 변경, 로고·갱신시각 텍스트는 `--on-dark`/`--on-dark-mute`로 대비 확보. 디자인 원칙(R"UI 크롬은 흑백·회색만")과 "다크 표면 미사용" 원칙이 상충될 수 있어, 원본 Ollama 디자인 문서(`design-ollama-original.md`)에 이미 문서화된 `surface-dark`/`on-dark` 역색 표면 패턴(원문에서는 최상위 가격표 카드 1곳에 한정 사용)을 그대로 차용 — 전면 다크모드가 아니라 헤더 한 곳에 한정된 예외로, "색은 데이터 잉크에만" 원칙은 유지(사용한 색이 흑백 스케일 내의 짙은 회색이지 유채색이 아님).
+3. **푸터 제작자·문의 정보**: "제작: jelitz · GitHub(`https://github.com/jelitz`) · 문의: `info@jelitz.com`" 한 줄 추가. GitHub 링크는 리포지토리가 아닌 프로필 링크로 연결(제작자 식별이 목적).
+4. **홈 상단 소개 문구**: 헤더와 "수급" 섹션 사이에 알상무 콘텐츠 기획 의도(기준 없는 판단에 대한 갈증, 기관 투자자 수준 노하우 전달, 루틴한 지표 확인 습관)를 3문장으로 요약해 노출. 사용자가 제공한 원문(유튜브 타임스탬프 포함 장문)을 그대로 옮기지 않고 "종목 추천이 아니라 데이터 기반 판단력을 기르는 것이 목표"라는 핵심만 재작성.
+
+토큰 추가: `web/src/styles/tokens.css`·`docs/steering/design.md`에 `--surface-dark`/`--on-dark`/`--on-dark-mute` 반영.
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증

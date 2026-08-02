@@ -4,7 +4,6 @@ import Home from './components/Home'
 import Detail from './components/Detail'
 import Modal from './components/Modal'
 import ErrorBoundary from './components/ErrorBoundary'
-import TickerBar from './components/TickerBar'
 import { formatDateTimeKST } from './lib/format'
 import './App.css'
 
@@ -62,16 +61,9 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-inner">
           <span className="app-logo">todayfin</span>
-          {summary && <span className="app-updated muted">마지막 갱신: {formatDateTimeKST(summary.generated_at)}</span>}
+          {summary && <span className="app-updated">마지막 갱신: {formatDateTimeKST(summary.generated_at)}</span>}
         </div>
       </header>
-
-      <TickerBar
-        summary={summary}
-        onSelect={(id) => {
-          window.location.hash = `#/i/${id}`
-        }}
-      />
 
       <main className="app-main">
         <ErrorBoundary key="home">
@@ -101,6 +93,13 @@ export default function App() {
           </p>
           <p className="app-sources muted">
             데이터 출처: 한국거래소(KRX), 네이버페이 증권, Yahoo Finance, 미국 재무부, 한국은행(ECOS)
+          </p>
+          <p className="app-credit muted">
+            제작: jelitz ·{' '}
+            <a href="https://github.com/jelitz" target="_blank" rel="noopener noreferrer">
+              GitHub
+            </a>{' '}
+            · 문의: <a href="mailto:info@jelitz.com">info@jelitz.com</a>
           </p>
         </div>
       </footer>

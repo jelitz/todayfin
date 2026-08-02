@@ -4,11 +4,14 @@
   /* 표면 */
   --canvas: #ffffff;
   --surface-soft: #fafafa;
+  --surface-dark: #171717;
   /* 텍스트 */
   --ink: #000000;
   --ink-charcoal: #525252;
   --ink-body: #737373;
   --ink-muted: #a3a3a3;
+  --on-dark: #ffffff;
+  --on-dark-mute: rgba(255, 255, 255, 0.7);
   /* 보더 */
   --hairline: #e5e5e5;
   --hairline-strong: #d4d4d4;

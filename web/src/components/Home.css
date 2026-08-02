@@ -11,6 +11,19 @@
   }
 }
 
+.home-intro {
+  max-width: 720px;
+  font-size: var(--fs-body-sm);
+  line-height: 1.7;
+  color: var(--ink-body);
+  margin: 0 0 calc(var(--space-unit) * 6);
+}
+
+.home-intro strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .home-section {
   margin-bottom: var(--space-section);
 }
