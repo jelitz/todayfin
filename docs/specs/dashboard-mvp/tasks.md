@@ -39,11 +39,25 @@
   - 파비콘은 Vite 기본 favicon.svg 유지(커스텀 파비콘은 2단계)
 
 ## Stage 4 — 자동화·운영 경화
-- ⬜ collect-and-deploy.yml (cron 2개 + dispatch, 잡 내 빌드·배포, concurrency)
-- ⬜ deploy.yml (main push)
-- ⬜ Secrets 등록 (ECOS_API_KEY, FRED_API_KEY)
-- ⬜ workflow_dispatch 일괄 검증 → 익일 크론 관찰
-- ⬜ 스테일 3영업일 실패 승격 동작 확인
+- ✅ collect-and-deploy.yml: synthetic → 실제 pipeline/collect.py 실행으로 교체. cron 2개
+  (장전 `10 23 * * 0-5`/장후 `40 9 * * 1-5` UTC, github.event.schedule로 프로필 분기) +
+  workflow_dispatch(profile 선택 입력). collect 실패는 continue-on-error로 배포를 막지 않되
+  마지막 단계에서 job을 실패로 승격(R2 충족)
+- ✅ deploy.yml: 실제 `npm ci && npm run build`로 교체(placeholder 대체), data/ 복사
+- ✅ Secrets 등록: FRED_API_KEY(사용자 완료). ECOS_API_KEY·KRX Open API 키는 신청 대기 중 —
+  등록되는 대로 collect-and-deploy.yml 재실행만 하면 ktb3y 자동 반영
+- ✅ workflow_dispatch(profile=all) 실행 → 수집(ktb3y만 예상대로 실패)→커밋→빌드→배포 전 단계
+  success 확인(run 30757418378), meta.json에 실행 이력 기록 확인
+- ✅ 배포 URL(`https://jelitz.github.io/todayfin/`) 실제 브라우저 검증 — 홈·상세(캔들+거래량+MA+
+  크로스헤어) 정상
+- ✅ **배포 중 발견·수정한 버그**: `web/vite.config.ts`에 GitHub Pages 서브패스(`/todayfin/`)용
+  base 설정이 없어 첫 배포가 흰 화면이었음(asset 경로가 절대경로 `/assets/...`로 생성되어 503).
+  `isPreview`로 dev만 `/`, build/preview는 `/todayfin/`로 분기해 수정 — 로컬에서도 실배포와
+  동일하게 재현·검증 가능하도록 함
+- ⬜ 스테일 3영업일 실패 승격의 실제 발동은 자연 발생 대기(현재는 안전장치가 "skipped"로
+  정상 통과함만 확인) — 향후 소스 장애 시 관찰
+- ⬜ 익일 이후 장전(KST 08:10)·장후(KST 18:40) cron 자동 실행은 시간 경과가 필요해 미확인
+  (워크플로우 자체는 workflow_dispatch로 관통 검증 완료, cron 트리거만 남음)
 
 ## 2단계 (범위 외 백로그)
 - ⬜ 기준일 선택 누적수익률 비교 (롱숏 상대강도)

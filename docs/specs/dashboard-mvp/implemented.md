@@ -81,6 +81,14 @@
 
 **배포 시 필요 조치(Stage 4에서 처리)**: 로컬 dev용으로 쓴 `web/public/data/` 복사 방식과 별개로, 실제 배포는 `dist/data/`에 빌드 후 복사하는 방식으로 `deploy.yml`/`collect-and-deploy.yml`을 갱신해야 함(현재 두 워크플로우는 Stage 1 placeholder를 배포하는 상태로 남아있어 Stage 4에서 반드시 갱신).
 
+## Stage 4 — 자동화·배포 구현 노트 (2026-08-03)
+
+**GitHub Pages base 경로 버그**: 첫 실배포(`https://jelitz.github.io/todayfin/`) 확인 시 완전한 흰 화면이었음. 원인은 `web/vite.config.ts`에 `base` 설정이 없어 프로덕션 빌드가 asset을 절대경로(`/assets/...`)로 참조했기 때문 — GitHub Pages 프로젝트 사이트는 리포지토리명 서브패스(`/todayfin/`)에서 서빙되므로 실제로는 `/todayfin/assets/...`여야 함. 로컬 `npm run dev`에서는 base가 항상 `/`라 이 문제가 전혀 재현되지 않았고, **실제 배포에서만 드러난 버그**(Stage 3의 z-index 버그와 같은 종류 — 렌더링/배포 환경 차이는 정적 리뷰·로컬 개발로 못 잡음).
+
+수정: `defineConfig(({ command, isPreview }) => ({ base: command === 'build' || isPreview ? '/todayfin/' : '/' }))`. 함정: `vite preview`도 config 로딩 시 `command`는 `'build'`가 아니라 `'serve'`로 잡힌다(dev와 동일) — `isPreview` 플래그로 별도 구분해야 로컬에서 `npm run preview`로 실배포와 동일한 서브패스 조건을 재현할 수 있다. 이 구분 없이 `command==='build'`만 썼다면 로컬 preview 검증이 여전히 실제 문제를 놓쳤을 것.
+
+**배포 파이프라인 동작 확인**: `workflow_dispatch(profile=all)` 실행(run 30757418378)에서 collect(ktb3y만 실패, 나머지 10개 ok) → commit(`data: all sync ...`) → npm build → Pages 배포 전 단계 성공. "Fail job if collect had errors" 안전장치 스텝은 collect가 outcome=success였으므로 정상적으로 skipped. `deploy.yml`도 코드 push로 정상 트리거·배포됨.
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증
