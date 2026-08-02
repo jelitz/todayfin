@@ -57,6 +57,10 @@
 - Windows 콘솔 한글 깨짐: `collect.py`에 `sys.stdout.reconfigure(encoding="utf-8")` 추가(CLAUDE.md 전역 규칙 준수). 로컬 실행 시 `PYTHONIOENCODING=utf-8`도 함께 권장.
 - 스테일 판정(3영업일)은 오늘 프로필에 포함된 지표에서만 워크플로우 실패로 승격 — 아직 백필되지 않은 지표(파일 없음)는 summary에서 제외되어 오탐 없음.
 
+## Stage 2 버그 수정: summary.json 대표값 인덱싱 (2026-08-03)
+
+첫 5년 백필 직후 값 검증 중 발견: `build_summary()`가 모든 지표 타입에 `series[-1][-1]`(행의 마지막 컬럼)을 대표값으로 사용했음. OHLCV 행은 `[date,o,h,l,c,v]`라 마지막 컬럼이 **거래량**이었고(코스피 "최신값"이 4억+로 표시), flows 행은 `[date,individual,foreign,institution]`이라 마지막 컬럼이 **institution**이었음(알상무 기준의 핵심 계열인 foreign이 아님). `_headline_index()` 헬퍼로 컬럼명 기반 조회(ohlcv→close, flows→foreign, line→value)로 수정하고 회귀 테스트 3개 추가. 데이터 정확성이 최우선 원칙이라 프론트 착수 전 발견·수정.
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증

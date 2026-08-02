@@ -22,8 +22,9 @@
 - ✅ validate.py (스키마·OHLC 불변식·날짜 단조·이상치) — 단위 테스트 12개 통과
 - ✅ collect.py (프로필 분기·재시도·스테이징·원자적 교체·meta/summary, stale 3영업일 실패 승격)
 - ✅ 최근 3개월(90일) 수집으로 파이프라인 검증 (2회 연속 실행 — 중복 0건, 날짜 정렬 정상)
-- ✅ 5년 백필 실행 → data/ 완성 (ktb3y 제외 10개 지표, ECOS 키 대기)
-- ✅ validate.py 단위 테스트 (pipeline/tests/test_validate.py, 12 passed)
+- ✅ 5년 백필 실행 → data/ 완성 (2021-08~2026-08, ktb3y 제외 10개 지표, 12,420 데이터 포인트. FRED_API_KEY는 사용자가 Secrets 등록 완료, ECOS·KRX는 신청 대기)
+- ✅ validate.py 단위 테스트 (pipeline/tests/test_validate.py, 15 passed — summary 대표값 버그 회귀 테스트 포함)
+- ✅ summary.json 대표값 인덱싱 버그 수정 (OHLCV가 종가 대신 거래량을 표시하던 문제)
 
 ## Stage 3 — 프론트 대시보드
 - ⬜ Vite+React+TS 스캐폴드, 디자인 토큰 CSS
