@@ -5,7 +5,7 @@
 - ✅ steering 문서 4종 (product/tech/structure/design + Ollama 원문)
 - ✅ specs 문서 (requirements/design/tasks/implemented)
 - ✅ docs/data-rights.md 초안
-- ⬜ GitHub public repo 생성·push
+- ✅ GitHub public repo 생성·push (https://github.com/jelitz/todayfin)
 - ⬜ 사용자: ECOS 키(필수)·FRED 키(권장)·KRX Open API 인증키(대기용) 신청
 
 ## Stage 1 — 클라우드 워킹 스켈레톤 + 소스 스파이크
