@@ -36,12 +36,14 @@ def fetch(indicator_id: str, start: date, end: date) -> pd.DataFrame:
 
 | 어댑터 | 담당 지표 | 방식 |
 |--------|----------|------|
-| naver.py | investor_kospi/kosdaq | `investorDealTrendDay` HTML 표 파싱 (bizdate·sosok·page), UA 헤더 |
-| fdr_source.py | kospi, kosdaq, samsung, skhynix | `fdr.DataReader` |
-| stooq.py | usdkrw, usdjpy, wti(cl.f), (후보 ust10y=10usy.b) | `https://stooq.com/q/d/l/?s={sym}&i=d` CSV |
-| treasury.py | (후보 ust10y) | 재무부 Daily Par Yield CSV |
-| ecos.py | ktb3y | ECOS Open API (통계표 817Y002 계열 — Stage 1 확정) |
-| fred.py | ust10y 보정 | FRED API DGS10 (선택) |
+| naver.py | investor_kospi(`sosok=''`), investor_kosdaq(`sosok='02'`) | `investorDealTrendDay` HTML 표 파싱 (bizdate·sosok·page), UA 헤더 — Stage 1에서 Actions 러너 검증 완료 |
+| fdr_source.py | kospi, kosdaq, samsung, skhynix | `fdr.DataReader` — Stage 1 검증 완료 |
+| yfinance_source.py | usdkrw(`KRW=X`), usdjpy(`JPY=X`), wti(`CL=F`) | `yf.Ticker(sym).history()` — Stooq 폐기(봇 차단 확인)로 1순위 승격, Stage 1 검증 완료 |
+| treasury.py | ust10y | 재무부 Daily Par Yield CSV (`10 Yr` 컬럼) — Stage 1 검증 완료, 퍼블릭 도메인 |
+| ecos.py | ktb3y | ECOS Open API (통계표 817Y002 계열 — 키 수령 후 최종 확정 예정) |
+| fred.py | ust10y 보정 | FRED API DGS10 (1영업일 지연, 검증용) |
+
+**폐기**: stooq.py — 2026년 도입된 SHA-256 proof-of-work 봇 챌린지로 `.com`/`.pl` 모두 완전 차단 확인(로컬·Actions 양쪽). 코드 작성하지 않음.
 
 ## 데이터 스키마
 

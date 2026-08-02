@@ -1,0 +1,69 @@
+name: Collect and deploy (data pipeline)
+
+# Stage 1 스켈레톤: synthetic 데이터로 "수집 → 커밋 → 빌드 → Pages 배포"를
+# 한 잡 안에서 완결하는 패턴을 검증한다 (GITHUB_TOKEN 커밋은 다른 워크플로우를
+# 트리거하지 않으므로 push 트리거 배포에 의존할 수 없음 — 외부 검토 지적 사항).
+# Stage 2/4에서 synthetic 단계를 pipeline/collect.py 실행으로 교체하고 cron을 추가한다.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  collect-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Collect (synthetic — Stage 2/4에서 실제 파이프라인으로 교체)
+        run: |
+          mkdir -p data
+          python3 - <<'PY'
+          import json, datetime
+          now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+          with open("data/meta.json", "w", encoding="utf-8") as f:
+              json.dump({"runs": [{"profile": "skeleton", "started_at": now, "results": {"synthetic": "ok"}}]}, f, ensure_ascii=False, indent=2)
+          print("wrote data/meta.json at", now)
+          PY
+
+      - name: Commit data (GITHUB_TOKEN — 후속 워크플로우를 트리거하지 않음)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/meta.json
+          if git diff --cached --quiet; then
+            echo "no data changes to commit"
+          else
+            git commit -m "data: skeleton sync $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
+
+      - name: Build site
+        run: |
+          mkdir -p _site
+          cp web/placeholder/index.html _site/index.html
+          mkdir -p _site/data
+          cp -r data/. _site/data/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

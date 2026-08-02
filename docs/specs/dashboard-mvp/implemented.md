@@ -18,10 +18,28 @@
 | cron 오프셋 08:10/18:40 (정각 회피) | GitHub cron 정시 보장 없음 + 정각 부하 |
 | 다크모드 미구현 | Ollama 원문 원칙(라이트 온리) 준수, 사용자 디자인 지시 |
 
-## 미결 질문 (Stage 1에서 해소)
+## Stage 1 스파이크 결과 (2026-08-03, 로컬 + GitHub Actions 러너 양쪽 실행)
 
-- [ ] ust10y 1순위: 재무부 Daily Par Yield CSV vs Stooq 10usy.b — 값 정의 비교 후 확정
-- [ ] ECOS 국고채 3년: 통계표·항목 코드, 단위, 관측일 규약, 발표 시각
-- [ ] 네이버 investorDealTrendDay: sosok 값 매핑(코스피/코스닥), 당일 잠정치 포함 여부
-- [ ] FDR 종목 데이터의 수정주가 여부 (액면분할 대응 정책 결정)
-- [ ] Stooq 일일 다운로드 제한 실측 (Actions 환경)
+| 소스 | 로컬(국내 IP) | Actions(해외 IP) | 판정 |
+|------|:---:|:---:|------|
+| 네이버 investorDealTrendDay | ✅ | ✅ | 채택 확정. `sosok=''`/`'01'`=코스피, `'02'`=코스닥 (응답 값이 다름을 확인) |
+| FDR (KS11/KQ11/005930/000660) | ✅ | ✅ | 채택 확정 |
+| **Stooq** (usdkrw/usdjpy/cl.f/10usy.b) | ❌ | ❌ | **완전 폐기.** 2026년 중 도입된 봇 방지(SHA-256 proof-of-work JS 챌린지)로 `.com`/`.pl` 도메인 모두 차단. 헤더·파라미터 우회 불가 확인 |
+| **yfinance** (KRW=X, JPY=X, CL=F) | ✅ | ✅ | **1순위로 승격** (원래 폴백이었으나 Stooq 폐기로 대체 필요, 클라우드 실측 정상 확인) |
+| 미 재무부 Daily Par Yield CSV | ✅ | ✅ | 채택 확정. `10 Yr` 컬럼 사용, 값 예시 4.75% — Stooq 폐기로 비교 대상 없이 단독 채택 |
+| ECOS (국고채 3년) | ⏭️ 스킵 | ⏭️ 스킵 | **미해결 — ECOS_API_KEY 필요 (사용자 액션 대기)** |
+
+### 지표 → 소스 매핑 갱신 (requirements.md·design.md·tech.md 동기화 필요)
+
+| 지표 | 확정 1순위 | 폴백 |
+|------|-----------|------|
+| usdkrw | yfinance `KRW=X` | — (동일 정의 대체 없음, 실패 시 stale) |
+| usdjpy | yfinance `JPY=X` | — |
+| wti | yfinance `CL=F` | — |
+| ust10y | 미 재무부 Daily Par Yield (10 Yr) | FRED `DGS10` (1영업일 지연 보정용) |
+
+## 남은 미결 질문
+
+- [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증
+- [ ] FDR 종목 데이터의 수정주가 여부 (액면분할 대응 정책) — MVP 진행에 비차단, Stage 2에서 FDR 문서 확인 후 스키마에 명기
+- [ ] yfinance 클라우드 안정성은 1회 검증 — Stage 4 자동화 관찰 기간(수일)에 재확인 필요 (알려진 간헐적 429 이력 있음)
