@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+web/dist/
+
+# 환경 변수 (API 키 — 절대 커밋 금지)
+.env
+.env.*
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# 수집 임시 영역 (원자적 교체 전 스테이징)
+pipeline/.staging/
