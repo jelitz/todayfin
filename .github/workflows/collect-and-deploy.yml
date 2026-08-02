@@ -1,12 +1,30 @@
 name: Collect and deploy (data pipeline)
 
-# Stage 1 스켈레톤: synthetic 데이터로 "수집 → 커밋 → 빌드 → Pages 배포"를
-# 한 잡 안에서 완결하는 패턴을 검증한다 (GITHUB_TOKEN 커밋은 다른 워크플로우를
-# 트리거하지 않으므로 push 트리거 배포에 의존할 수 없음 — 외부 검토 지적 사항).
-# Stage 2/4에서 synthetic 단계를 pipeline/collect.py 실행으로 교체하고 cron을 추가한다.
+# 장전(preopen)/장후(afterclose) cron 또는 수동 실행으로 pipeline/collect.py를 돌리고,
+# 결과를 data/에 커밋한 뒤 같은 잡 안에서 web을 빌드해 Pages까지 배포한다.
+# GITHUB_TOKEN으로 만든 커밋은 다른 워크플로우(push 트리거)를 일으키지 않으므로
+# (Stage 1에서 실측 확인, docs/specs/dashboard-mvp/implemented.md 참조) 배포를
+# push 트리거에 의존하지 않고 이 잡 안에서 직접 완결한다.
+#
+# 정각 회피 오프셋(GitHub cron은 정시를 보장하지 않고 정각 부하가 큼):
+#   10 23 * * 0-5 (UTC) = KST 월~토 08:10 → preopen (미국채·WTI·환율)
+#   40  9 * * 1-5 (UTC) = KST 평일 18:40 → afterclose (국내 지수·종목·수급·국고채)
 
 on:
+  schedule:
+    - cron: "10 23 * * 0-5"
+    - cron: "40 9 * * 1-5"
   workflow_dispatch:
+    inputs:
+      profile:
+        description: "수집 프로필"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - preopen
+          - afterclose
+          - all
 
 permissions:
   contents: write
@@ -26,35 +44,57 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Collect (synthetic — Stage 2/4에서 실제 파이프라인으로 교체)
+      - name: Determine profile
+        id: which
         run: |
-          mkdir -p data
-          python3 - <<'PY'
-          import json, datetime
-          now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-          with open("data/meta.json", "w", encoding="utf-8") as f:
-              json.dump({"runs": [{"profile": "skeleton", "started_at": now, "results": {"synthetic": "ok"}}]}, f, ensure_ascii=False, indent=2)
-          print("wrote data/meta.json at", now)
-          PY
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "profile=${{ inputs.profile }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "10 23 * * 0-5" ]; then
+            echo "profile=preopen" >> "$GITHUB_OUTPUT"
+          else
+            echo "profile=afterclose" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Commit data (GITHUB_TOKEN — 후속 워크플로우를 트리거하지 않음)
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline deps
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Collect
+        id: collect
+        continue-on-error: true # 부분 실패(예: 특정 지표 stale)가 배포를 막지 않도록 — 마지막 단계에서 job을 실패로 승격
+        env:
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python pipeline/collect.py --profile ${{ steps.which.outputs.profile }}
+
+      - name: Commit data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/meta.json
+          git add data/
           if git diff --cached --quiet; then
             echo "no data changes to commit"
           else
-            git commit -m "data: skeleton sync $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "data: ${{ steps.which.outputs.profile }} sync $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
 
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
       - name: Build site
         run: |
-          mkdir -p _site
-          cp web/placeholder/index.html _site/index.html
-          mkdir -p _site/data
-          cp -r data/. _site/data/
+          cd web
+          npm ci
+          npm run build
+          mkdir -p dist/data
+          cp -r ../data/. dist/data/
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
@@ -62,8 +102,14 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: _site
+          path: web/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+
+      - name: Fail job if collect had errors
+        if: steps.collect.outcome == 'failure'
+        run: |
+          echo "::error::수집 중 실패 또는 stale 지표가 있었습니다 (배포는 완료됨). 로그를 확인하세요."
+          exit 1

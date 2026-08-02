@@ -1,5 +1,8 @@
 name: Build and deploy site
 
+# 코드(web/**) 변경 시 최신 data/(repo에 이미 커밋된 것)로 빌드·배포한다.
+# 데이터 자체의 수집·배포는 collect-and-deploy.yml이 담당(cron + workflow_dispatch).
+
 on:
   push:
     branches: [main]
@@ -27,13 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
       - name: Build site
-        # Stage 1 스켈레톤: placeholder를 그대로 배포. Stage 3에서 `npm ci && npm run build`로 교체.
         run: |
-          mkdir -p _site
-          cp web/placeholder/index.html _site/index.html
-          mkdir -p _site/data
-          if [ -d data ]; then cp -r data/. _site/data/ 2>/dev/null || true; fi
+          cd web
+          npm ci
+          npm run build
+          mkdir -p dist/data
+          if [ -d ../data ]; then cp -r ../data/. dist/data/; fi
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
@@ -41,7 +50,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: _site
+          path: web/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
