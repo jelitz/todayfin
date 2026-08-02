@@ -1,0 +1,11 @@
+{
+  "runs": [
+    {
+      "profile": "skeleton",
+      "started_at": "2026-08-02T15:51:11.680823+00:00",
+      "results": {
+        "synthetic": "ok"
+      }
+    }
+  ]
+}
