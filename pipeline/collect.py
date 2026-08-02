@@ -166,6 +166,20 @@ def _is_stale(observed_last: str | None, today: date) -> bool:
     return _business_days_between(date.fromisoformat(observed_last), today) > _STALE_BUSINESS_DAYS
 
 
+def _headline_index(spec: dict) -> int:
+    """카드에 표시할 대표값의 행 내 컬럼 인덱스.
+
+    ohlcv → close (volume 아님), flows → foreign(외국인, 알상무 기준 핵심 계열),
+    line → value. 컬럼 순서에 의존하지 않도록 이름으로 찾는다.
+    """
+    cols = _record_columns(spec)
+    if spec["type"] == "ohlcv":
+        return cols.index("close")
+    if spec["type"] == "flows":
+        return cols.index("foreign")
+    return cols.index("value")
+
+
 def build_summary(data_dir: str) -> dict:
     out = []
     today = date.today()
@@ -180,9 +194,10 @@ def build_summary(data_dir: str) -> dict:
             continue
         cutoff = (today - timedelta(days=95)).isoformat()
         spark_series = [row for row in series if row[0] >= cutoff] or series[-60:]
+        idx = _headline_index(spec)
 
-        latest = series[-1][-1]
-        prev = series[-2][-1] if len(series) >= 2 else None
+        latest = series[-1][idx]
+        prev = series[-2][idx] if len(series) >= 2 else None
         change_pct = (
             round((latest - prev) / prev * 100, 2) if prev not in (None, 0) else None
         )
@@ -197,7 +212,7 @@ def build_summary(data_dir: str) -> dict:
                 "change_pct": change_pct,
                 "observed_last": rec.get("observed_last"),
                 "stale": _is_stale(rec.get("observed_last"), today),
-                "spark": [row[-1] for row in spark_series],
+                "spark": [row[idx] for row in spark_series],
             }
         )
     return {"generated_at": datetime.now(timezone.utc).isoformat(), "indicators": out}

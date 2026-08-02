@@ -19,6 +19,9 @@ web/dist/
 Thumbs.db
 .DS_Store
 
+# 로컬 에이전트 툴링 아티팩트
+.claude/
+
 # 수집 임시 영역 (원자적 교체 전 스테이징)
 pipeline/.staging/
 pipeline/spike-result.json

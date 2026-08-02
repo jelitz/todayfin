@@ -1,10 +1,20 @@
 {
   "runs": [
     {
-      "profile": "skeleton",
-      "started_at": "2026-08-02T15:51:11.680823+00:00",
+      "profile": "all",
+      "started_at": "2026-08-02T16:04:48.000495+00:00",
       "results": {
-        "synthetic": "ok"
+        "investor_kospi": "ok",
+        "investor_kosdaq": "ok",
+        "kospi": "ok",
+        "kosdaq": "ok",
+        "samsung": "ok",
+        "skhynix": "ok",
+        "usdkrw": "ok",
+        "usdjpy": "ok",
+        "wti": "ok",
+        "ust10y": "ok",
+        "ktb3y": "failed"
       }
     }
   ]

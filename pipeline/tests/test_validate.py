@@ -109,3 +109,30 @@ def test_unknown_type_raises():
     df = _ohlcv([["2026-08-01", 100, 105, 99, 103, 1000]])
     with pytest.raises(ValueError, match="알 수 없는"):
         validate.validate("unknown_type", df)
+
+
+def test_headline_index_ohlcv_is_close_not_volume():
+    import collect
+
+    spec = {"type": "ohlcv"}
+    idx = collect._headline_index(spec)
+    row = ["2026-08-01", 100, 105, 99, 103, 999999999]  # date,o,h,l,close=103,volume=999999999
+    assert row[idx] == 103
+
+
+def test_headline_index_flows_is_foreign():
+    import collect
+
+    spec = {"type": "flows", "columns": ["individual", "foreign", "institution"]}
+    idx = collect._headline_index(spec)
+    row = ["2026-08-01", -100.0, 250.0, -150.0]  # foreign=250.0
+    assert row[idx] == 250.0
+
+
+def test_headline_index_line_is_value():
+    import collect
+
+    spec = {"type": "line"}
+    idx = collect._headline_index(spec)
+    row = ["2026-08-01", 1436.6]
+    assert row[idx] == 1436.6
