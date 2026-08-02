@@ -38,6 +38,17 @@
 | wti | yfinance `CL=F` | — |
 | ust10y | 미 재무부 Daily Par Yield (10 Yr) | FRED `DGS10` (1영업일 지연 보정용) |
 
+## Pages 배포 스켈레톤 검증 (2026-08-03)
+
+`collect-and-deploy.yml`을 `workflow_dispatch`로 실행해 핵심 아키텍처 가정을 실측 확인:
+
+1. 잡 내부에서 `github-actions[bot]`이 `GITHUB_TOKEN`으로 `data/meta.json`을 커밋·push (커밋 `792b962`)
+2. 그 push가 `data/**` 경로를 포함해 `deploy.yml`의 push 트리거 조건과 일치했음에도 **`deploy.yml`은 재실행되지 않음** — GitHub의 GITHUB_TOKEN 재귀 방지 규칙을 실측으로 재확인 (`gh run list --workflow=deploy.yml`에 새 실행 없음)
+3. `collect-and-deploy.yml`은 같은 잡 안에서 `actions/deploy-pages`로 직접 배포 완료
+4. 배포된 `https://jelitz.github.io/todayfin/data/meta.json`이 방금 커밋된 synthetic 값과 정확히 일치함을 curl로 확인
+
+→ **아키텍처의 "수집 잡 내 직접 배포" 설계가 유효함이 실증됨.** Stage 4에서는 이 워크플로우의 synthetic 수집 단계를 `pipeline/collect.py` 실행으로 교체하고 cron 2개를 추가하기만 하면 된다.
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증

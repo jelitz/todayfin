@@ -9,13 +9,13 @@
 - ⬜ 사용자: ECOS 키(필수)·FRED 키(권장)·KRX Open API 인증키(대기용) 신청
 
 ## Stage 1 — 클라우드 워킹 스켈레톤 + 소스 스파이크
-- ⬜ 소스별 최소 fetch 스크립트 (naver/fdr/stooq/treasury/ecos)
-- ⬜ GitHub Actions 러너에서 실행 — 해외 IP 접근·포맷·지연 기록
-- ⬜ 미국채 10년: 재무부 CSV vs Stooq 10usy.b 정의 비교 → 1순위 확정
-- ⬜ ECOS 통계표·항목 코드·단위·발표시각 확정 (키 수령 후)
-- ⬜ 네이버 sosok 값·컬럼·페이지네이션 확정
-- ⬜ synthetic JSON으로 actions/deploy-pages 관통 검증 (Pages URL 접속 확인)
-- ⬜ 결과를 requirements.md R1(정의)·implemented.md에 반영
+- ✅ 소스별 최소 fetch 스크립트 (pipeline/spike.py: naver/fdr/stooq/yfinance/treasury/ecos)
+- ✅ GitHub Actions 러너에서 실행 — 해외 IP 접근·포맷·지연 기록 (spike.yml, run 30755054154)
+- ✅ 미국채 10년: 재무부 CSV 채택 확정 (Stooq는 완전 폐기로 비교 불가, 단독 채택)
+- ⬜ ECOS 통계표·항목 코드·단위·발표시각 확정 — **ECOS_API_KEY 필요 (사용자 액션 대기)**
+- ✅ 네이버 sosok 값·컬럼 확정 (`''`/`'01'`=코스피, `'02'`=코스닥)
+- ✅ synthetic JSON으로 actions/deploy-pages 관통 검증 완료 (https://jelitz.github.io/todayfin/, GITHUB_TOKEN 재트리거 없음도 실측 확인)
+- ✅ 결과를 requirements.md R1·design.md·tech.md·implemented.md에 반영
 
 ## Stage 2 — 수집 파이프라인
 - ⬜ 어댑터 정규화 (fetch 인터페이스 통일)
