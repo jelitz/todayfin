@@ -20,6 +20,8 @@ export interface IndicatorRecord {
   type: IndicatorType;
   unit: string;
   source: string;
+  /** 화면에 표시할 "데이터의 원래 출처" 이름 (예: "Yahoo Finance", "한국거래소(KRX)") */
+  source_name: string;
   instrument: string;
   timezone: string;
   frequency: "daily";

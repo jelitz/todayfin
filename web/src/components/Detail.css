@@ -1,7 +1,7 @@
 .detail {
   max-width: var(--max-width-dashboard);
   margin: 0 auto;
-  padding: 24px var(--pad-card) var(--space-section);
+  padding: 32px var(--pad-card) 40px;
 }
 
 .detail-back-link {

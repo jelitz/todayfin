@@ -184,7 +184,7 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
         </div>
         <div className="detail-meta-row">
           <span className="detail-observed">기준일 {record.observed_last}</span>
-          <span className="detail-source">출처: {record.source}</span>
+          <span className="detail-source">출처: {record.source_name}</span>
         </div>
       </header>
 
@@ -238,7 +238,7 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
           <div className="detail-ma-group" role="group" aria-label="집계 방식">
             <label className="detail-ma-option">
               <input type="checkbox" checked={flowsWeekly} onChange={() => setFlowsWeekly((v) => !v)} />
-              주간+4주MA
+              주간집계
             </label>
           </div>
         )}
@@ -248,8 +248,7 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
         {record.type === 'flows' ? (
           <FlowsChart
             rows={filteredSeries as FlowsRow[]}
-            fullRows={record.series as FlowsRow[]}
-            mode={flowsWeekly ? 'weekly4ma' : 'daily'}
+            mode={flowsWeekly ? 'weekly' : 'daily'}
             height={460}
           />
         ) : (

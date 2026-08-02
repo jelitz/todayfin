@@ -136,6 +136,7 @@ def collect_one(
         "type": spec["type"],
         "unit": spec["unit"],
         "source": spec["fallback_source_label"] if used_fallback else spec["source_label"],
+        "source_name": spec["fallback_source_name"] if used_fallback else spec["source_name"],
         "instrument": spec["instrument"],
         "timezone": "Asia/Seoul",
         "frequency": "daily",

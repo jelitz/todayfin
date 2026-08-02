@@ -89,6 +89,17 @@
 
 **배포 파이프라인 동작 확인**: `workflow_dispatch(profile=all)` 실행(run 30757418378)에서 collect(ktb3y만 실패, 나머지 10개 ok) → commit(`data: all sync ...`) → npm build → Pages 배포 전 단계 성공. "Fail job if collect had errors" 안전장치 스텝은 collect가 outcome=success였으므로 정상적으로 skipped. `deploy.yml`도 코드 push로 정상 트리거·배포됨.
 
+## 사용자 피드백 반영 (2026-08-03, MVP 배포 후 1차 리뷰)
+
+1. **데이터 출처 표기 정확화**: `source`(어댑터 식별자, 예 `yfinance:CL=F`)를 그대로 화면에 노출하던 것을 `source_name`(사람이 읽는 원 출처) 필드로 분리. `pipeline/indicators.py`에 지표별 원 출처명을 등록(웹 검색으로 확인: finance.naver.com 자체가 "기본 데이터는 한국거래소(KRX)에서 제공"이라 명시, 네이버 증권은 "네이버페이 증권"으로 리브랜딩됨).
+   - naver 경유(수급) → "한국거래소(KRX) · 네이버페이 증권" / fdr(지수·종목) → "한국거래소(KRX)" / yfinance(환율·WTI) → "Yahoo Finance" / treasury → "미국 재무부(U.S. Department of the Treasury)" / fred 폴백 → "세인트루이스 연방준비은행(FRED)" / ecos → "한국은행(ECOS)"
+   - `source`(내부 식별자)는 유지 — meta.json 로그·디버깅용. 화면은 `source_name`만 사용.
+2. **수급 차트를 막대→3주체 라인**으로 전면 재작성. 개인(회색 `#a3a3a3`)/외국인(파랑 `#0051c7`)/기관(주황 `#f59e0b`) 각각 라인, 범례 표시. 기존 "일별/주간+4주MA" 토글은 "일별/주간집계"로 단순화(4주MA 오버레이는 3주체 각각에 적용하면 라인이 6개가 되어 과밀해지므로 이번 변경에서 제외 — 필요하면 옵션으로 재도입 가능).
+3. **카드 클릭 UX**: 페이지 전환(라우팅 이동) 대신 **모달 오버레이**로 전환. 홈 그리드(카드 한눈에 보기 — 사용자가 긍정 평가한 부분)는 배경에 그대로 유지되고, 상세 뷰가 그 위에 팝업으로 뜬다. 좌측/상단 메뉴바 방식은 "여러 지표를 나란히 비교하는 그리드 뷰"와 상충되어 채택하지 않음. 해시 라우팅(`#/i/{id}`)은 유지해 딥링크·새로고침·공유 링크는 그대로 동작. 카드 클릭 가능성 인지 문제는 우측 상단 화살표 아이콘(↗) + hover 시 보더를 `--ink`로 진하게 강조해 개선.
+4. **푸터 출처 표기**: 1번과 동일한 명칭으로 통일("한국거래소(KRX), 네이버페이 증권, Yahoo Finance, 미국 재무부, 한국은행(ECOS)").
+
+신규 컴포넌트: `Modal.tsx`(ESC·배경클릭·body 스크롤 잠금). `App.tsx`는 Home을 상시 마운트하고 route가 detail일 때만 Modal 안에 Detail을 추가로 렌더하는 구조로 재구성.
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증

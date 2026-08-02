@@ -1,24 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import {
   createChart,
-  HistogramSeries,
   LineSeries,
   type IChartApi,
   type ISeriesApi,
-  type HistogramData,
   type LineData,
   type UTCTimestamp,
 } from "lightweight-charts";
 import type { FlowsRow } from "../types";
-import { toWeekly, fourWeekMA } from "../lib/weekly";
-import { CHART_COLOR_UP, CHART_COLOR_DOWN, CHART_BG, CHART_TEXT, CHART_GRID, maColor } from "../lib/chartTheme";
+import { toWeekly } from "../lib/weekly";
+import { CHART_BG, CHART_TEXT, CHART_GRID, FLOWS_SUBJECT_COLORS } from "../lib/chartTheme";
 
 export interface FlowsChartProps {
   /** 화면에 표시할(기간 필터링된) 행 — [date, individual, foreign, institution], date 오름차순 */
   rows: FlowsRow[];
-  /** 4주MA 계산용 전체 시계열(워밍업 포함). 생략 시 rows로만 계산. */
-  fullRows?: FlowsRow[];
-  mode: "daily" | "weekly4ma";
+  /** daily: 일별 값을 그대로 라인으로 / weekly: 주간 합산 후 라인으로(노이즈 감소) */
+  mode: "daily" | "weekly";
   height?: number;
 }
 
@@ -28,17 +25,23 @@ interface TooltipState {
   lines: { label: string; value: string; color: string }[];
 }
 
+const SUBJECTS = [
+  { key: "individual", label: "개인", idx: 1 as const, color: FLOWS_SUBJECT_COLORS.individual },
+  { key: "foreign", label: "외국인", idx: 2 as const, color: FLOWS_SUBJECT_COLORS.foreign },
+  { key: "institution", label: "기관", idx: 3 as const, color: FLOWS_SUBJECT_COLORS.institution },
+];
+
 function formatNum(v: number): string {
   return v.toLocaleString("ko-KR", { maximumFractionDigits: 0 });
 }
 
 export default function FlowsChart(props: FlowsChartProps) {
-  const { rows, fullRows, mode, height = 400 } = props;
+  const { rows, mode, height = 400 } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  const isEmpty = mode === "daily" ? rows.length === 0 : toWeekly(rows, 2).length === 0;
+  const isEmpty = rows.length === 0;
 
   useEffect(() => {
     if (isEmpty || !containerRef.current) return;
@@ -67,42 +70,26 @@ export default function FlowsChart(props: FlowsChartProps) {
     });
     chartRef.current = chart;
 
-    let histogramSeries: ISeriesApi<"Histogram">;
-    let maSeries: ISeriesApi<"Line"> | null = null;
+    const seriesList: { label: string; color: string; series: ISeriesApi<"Line"> }[] = [];
 
-    if (mode === "daily") {
-      histogramSeries = chart.addSeries(HistogramSeries, { color: CHART_COLOR_UP });
-      const data: HistogramData[] = rows.map(([date, , foreign]) => ({
-        time: date as unknown as UTCTimestamp,
-        value: foreign,
-        color: foreign >= 0 ? CHART_COLOR_UP : CHART_COLOR_DOWN,
-      }));
-      histogramSeries.setData(data);
-    } else {
-      // 4주MA 워밍업: fullRows(전체)로 주간집계+MA를 계산한 뒤, rows(표시 구간)에 해당하는 주만 그린다.
-      const source = fullRows && fullRows.length > 0 ? fullRows : rows;
-      const weeklyAll = toWeekly(source, 2);
-      const maAll = fourWeekMA(weeklyAll);
-      const maByWeekStart = new Map(weeklyAll.map((w, i) => [w.weekStart, maAll[i]]));
-
-      const visibleStart = rows[0]?.[0];
-      const visibleWeekly = visibleStart ? weeklyAll.filter((w) => w.weekStart >= visibleStart) : weeklyAll;
-
-      histogramSeries = chart.addSeries(HistogramSeries, { color: CHART_COLOR_UP });
-      const histData: HistogramData[] = visibleWeekly.map((w) => ({
-        time: w.weekStart as unknown as UTCTimestamp,
-        value: w.sum,
-        color: w.sum >= 0 ? CHART_COLOR_UP : CHART_COLOR_DOWN,
-      }));
-      histogramSeries.setData(histData);
-
-      maSeries = chart.addSeries(LineSeries, { color: maColor(4, 0), lineWidth: 2 });
-      const lineData: LineData[] = visibleWeekly
-        .map((w) => ({ time: w.weekStart, value: maByWeekStart.get(w.weekStart) ?? null }))
-        .filter((d): d is { time: string; value: number } => d.value !== null)
-        .map((d) => ({ time: d.time as unknown as UTCTimestamp, value: d.value }));
-      maSeries.setData(lineData);
-    }
+    SUBJECTS.forEach((subject) => {
+      const series = chart.addSeries(LineSeries, { color: subject.color, lineWidth: 2 });
+      let data: LineData[];
+      if (mode === "daily") {
+        data = rows.map((r) => ({
+          time: r[0] as unknown as UTCTimestamp,
+          value: r[subject.idx],
+        }));
+      } else {
+        const weekly = toWeekly(rows, subject.idx);
+        data = weekly.map((w) => ({
+          time: w.weekStart as unknown as UTCTimestamp,
+          value: w.sum,
+        }));
+      }
+      series.setData(data);
+      seriesList.push({ label: subject.label, color: subject.color, series });
+    });
 
     chart.timeScale().fitContent();
 
@@ -113,20 +100,12 @@ export default function FlowsChart(props: FlowsChartProps) {
         return;
       }
       const lines: TooltipState["lines"] = [];
-      const hd = param.seriesData.get(histogramSeries);
-      if (hd && "value" in hd) {
-        lines.push({
-          label: mode === "daily" ? "외국인 순매수" : "주간 순매수",
-          value: formatNum(hd.value),
-          color: hd.value >= 0 ? CHART_COLOR_UP : CHART_COLOR_DOWN,
-        });
-      }
-      if (maSeries) {
-        const md = param.seriesData.get(maSeries);
-        if (md && "value" in md) {
-          lines.push({ label: "4주MA", value: formatNum(md.value), color: maColor(4, 0) });
+      seriesList.forEach(({ label, color, series }) => {
+        const d = param.seriesData.get(series);
+        if (d && "value" in d) {
+          lines.push({ label, value: formatNum(d.value), color });
         }
-      }
+      });
       if (lines.length === 0) {
         setTooltip(null);
         return;
@@ -146,7 +125,7 @@ export default function FlowsChart(props: FlowsChartProps) {
       chart.remove();
       chartRef.current = null;
     };
-  }, [rows, fullRows, mode, height, isEmpty]);
+  }, [rows, mode, height, isEmpty]);
 
   if (isEmpty) {
     return <div>표시할 데이터가 없습니다</div>;
@@ -154,6 +133,19 @@ export default function FlowsChart(props: FlowsChartProps) {
 
   return (
     <div style={{ position: "relative" }}>
+      <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
+        {SUBJECTS.map((s) => (
+          <span
+            key={s.key}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: CHART_TEXT }}
+          >
+            <span
+              style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, display: "inline-block" }}
+            />
+            {s.label}
+          </span>
+        ))}
+      </div>
       <div ref={containerRef} style={{ width: "100%", height }} />
       {tooltip && (
         <div

@@ -28,3 +28,10 @@ export function maColor(period: number, fallbackIndex: number): string {
 export const CHART_BG = "#ffffff";
 export const CHART_TEXT = "#525252";
 export const CHART_GRID = "#e5e5e5";
+
+/** 수급 차트(개인/외국인/기관) 주체별 고정 색상. 외국인이 알상무 기준 핵심 계열이라 가장 눈에 띄는 파랑을 배정. */
+export const FLOWS_SUBJECT_COLORS = {
+  individual: "#a3a3a3",
+  foreign: "#0051c7",
+  institution: "#f59e0b",
+} as const;

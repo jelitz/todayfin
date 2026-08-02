@@ -1,4 +1,5 @@
 .indicator-card {
+  position: relative;
   background: var(--canvas);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card);
@@ -7,10 +8,41 @@
   display: flex;
   flex-direction: column;
   gap: calc(var(--space-unit) / 2);
+  transition: border-color 0.12s ease;
 }
 
-.indicator-card:hover {
-  border-color: var(--hairline-strong);
+.indicator-card:hover,
+.indicator-card:focus-visible {
+  border-color: var(--ink);
+}
+
+.indicator-card:hover .indicator-card-expand,
+.indicator-card:focus-visible .indicator-card-expand {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.indicator-card-expand {
+  position: absolute;
+  top: var(--pad-card);
+  right: var(--pad-card);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline-strong);
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .indicator-card-expand {
+    top: var(--pad-card-mobile);
+    right: var(--pad-card-mobile);
+  }
 }
 
 @media (max-width: 640px) {
@@ -22,6 +54,7 @@
 .indicator-card-name {
   font-size: var(--fs-body-sm);
   color: var(--ink-body);
+  padding-right: 28px;
 }
 
 .indicator-card-value {

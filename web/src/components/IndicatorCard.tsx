@@ -59,6 +59,9 @@ export default function IndicatorCard({ indicator, onClick }: IndicatorCardProps
         }
       }}
     >
+      <span className="indicator-card-expand" aria-hidden="true">
+        ↗
+      </span>
       <div className="indicator-card-name">{name}</div>
       <div className="indicator-card-value">{latest === null ? '—' : formatValue(latest, unit)}</div>
       <div className={`indicator-card-change ${changeClass}`}>
