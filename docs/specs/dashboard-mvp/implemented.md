@@ -49,6 +49,14 @@
 
 → **아키텍처의 "수집 잡 내 직접 배포" 설계가 유효함이 실증됨.** Stage 4에서는 이 워크플로우의 synthetic 수집 단계를 `pipeline/collect.py` 실행으로 교체하고 cron 2개를 추가하기만 하면 된다.
 
+## Stage 2 — 수집 파이프라인 구현 노트 (2026-08-03)
+
+- 어댑터 시그니처를 설계 문서의 `fetch(start, end)`에서 `fetch(indicator_id, start, end)`로 확장. 네이버·FDR·yfinance 어댑터가 여러 지표를 공유 로직(심볼/파라미터 매핑)으로 처리하므로 지표 ID를 넘겨받는 편이 자연스러움. `pipeline/indicators.py` 레지스트리가 지표→모듈 매핑을 담당.
+- 원자적 교체는 `pipeline/.staging/{id}.json`에 먼저 쓰고 `os.replace()`로 교체 — 실패 응답이 기존 정상 데이터를 덮어쓰지 않음(요구사항 R2 충족).
+- 증분 갱신 시 "최근 5영업일 재수집"을 `last_date - 7일`(주말 여유) vs `backfill_start` 중 더 늦은 날짜로 계산. **주의**: 이미 데이터가 존재하는 상태에서 `--backfill-years`를 늘려도 재백필되지 않는다(증분 로직이 항상 우선) — 의도된 동작이나 로컬 테스트 중 실제로 이 경로를 밟아 "5년 백필"이 실제로는 최근 7일만 재수집되는 것을 확인함. 진짜 재백필이 필요하면 `data/*.json`을 먼저 삭제해야 함(운영에서는 발생하지 않을 시나리오 — 최초 백필 1회뿐).
+- Windows 콘솔 한글 깨짐: `collect.py`에 `sys.stdout.reconfigure(encoding="utf-8")` 추가(CLAUDE.md 전역 규칙 준수). 로컬 실행 시 `PYTHONIOENCODING=utf-8`도 함께 권장.
+- 스테일 판정(3영업일)은 오늘 프로필에 포함된 지표에서만 워크플로우 실패로 승격 — 아직 백필되지 않은 지표(파일 없음)는 summary에서 제외되어 오탐 없음.
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증
