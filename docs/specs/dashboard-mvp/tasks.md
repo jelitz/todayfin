@@ -27,13 +27,16 @@
 - ✅ summary.json 대표값 인덱싱 버그 수정 (OHLCV가 종가 대신 거래량을 표시하던 문제)
 
 ## Stage 3 — 프론트 대시보드
-- ⬜ Vite+React+TS 스캐폴드, 디자인 토큰 CSS
-- ⬜ lib/ (ma·weekly·format) + 단위 테스트
-- ⬜ 홈: 4섹션 카드 그리드 + 스파크라인 (summary.json)
-- ⬜ 상세: PriceChart/FlowsChart + MA 토글·기간 프리셋·크로스헤어
-- ⬜ 해시 라우팅, stale·에러·스켈레톤 상태
-- ⬜ 반응형(1280/850/640), OG 메타·파비콘·면책 푸터
-- ⬜ 브라우저 검증 (차트 값 스팟체크·모바일)
+- ✅ Vite+React19+TS 스캐폴드, 디자인 토큰 CSS(styles/tokens.css), Pretendard Variable
+- ✅ lib/ (ma·weekly·format·stale·chartTheme) + 단위 테스트 37개 통과
+- ✅ 홈: 4섹션 카드 그리드 + 스파크라인 (summary.json 1회 fetch)
+- ✅ 상세: PriceChart(캔들+거래량+MA)/FlowsChart(막대+주간4주MA) + MA 토글·기간 프리셋(3M/6M/1Y/3Y/5Y)·크로스헤어 툴팁
+- ✅ 해시 라우팅(#/i/{id}), stale·에러·로딩 상태, ErrorBoundary
+- ✅ 반응형(1280/850/640 — CSS 미디어쿼리로 확인, 브라우저 리사이즈 시각 검증은 툴 제약으로 미실시), OG 메타·면책 푸터
+- ✅ Workflow(9 에이전트: 구현 5 + 통합 1 + 리뷰 3)로 구현 후 실제 브라우저(claude-in-chrome)로 검증
+  - 리뷰에서 발견된 실제 버그 다수 수정: usdkrw/usdjpy MA 토글 누락, samsung/skhynix 거래량 누락, MA 색상 인덱스 불일치, 크로스헤어 툴팁 미구현, MA가 표시기간으로 잘려 워밍업 부족, stale 판정 로직 이원화, decodeURIComponent 무방비
+  - 브라우저 검증 중 추가 발견·수정: 크로스헤어 툴팁 z-index 누락으로 실제 화면에 렌더 안 되던 버그(리뷰에서는 못 잡음 — 실행 결과를 봐야 드러나는 유형)
+  - 파비콘은 Vite 기본 favicon.svg 유지(커스텀 파비콘은 2단계)
 
 ## Stage 4 — 자동화·운영 경화
 - ⬜ collect-and-deploy.yml (cron 2개 + dispatch, 잡 내 빌드·배포, concurrency)

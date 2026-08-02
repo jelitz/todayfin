@@ -61,6 +61,26 @@
 
 첫 5년 백필 직후 값 검증 중 발견: `build_summary()`가 모든 지표 타입에 `series[-1][-1]`(행의 마지막 컬럼)을 대표값으로 사용했음. OHLCV 행은 `[date,o,h,l,c,v]`라 마지막 컬럼이 **거래량**이었고(코스피 "최신값"이 4억+로 표시), flows 행은 `[date,individual,foreign,institution]`이라 마지막 컬럼이 **institution**이었음(알상무 기준의 핵심 계열인 foreign이 아님). `_headline_index()` 헬퍼로 컬럼명 기반 조회(ohlcv→close, flows→foreign, line→value)로 수정하고 회귀 테스트 3개 추가. 데이터 정확성이 최우선 원칙이라 프론트 착수 전 발견·수정.
 
+## Stage 3 — 프론트 구현 노트 (2026-08-03)
+
+**진행 방식**: Ultracode 모드에서 Workflow 도구로 병렬 구현(9 에이전트: lib/PriceChart/FlowsChart/Home+Card/Detail 5개 병렬 → 통합 1개 → design/requirements/quality 리뷰 3개 병렬). 빌드(tsc/vite build/vitest)는 전부 통과했으나 리뷰에서 실제 요구사항 위반·버그가 다수 발견되어 직접 수정.
+
+**리뷰에서 발견되어 수정한 것들**:
+- usdkrw·usdjpy 상세 뷰에 R1이 요구하는 20/60일 MA 토글이 아예 없었음(wti만 처리하는 조건문) → `LINE_MA_PERIODS` 맵으로 일반화
+- samsung·skhynix에 "캔들+거래량"이 요구되나 거래량이 전혀 그려지지 않음 → PriceChart에 `showVolume` prop + 별도 priceScale 오버레이 히스토그램 추가
+- MA 라인 색상이 `기간`이 아니라 `배열 인덱스`로 정해져 있어 60일 체크 해제 시 120일선이 다른 색으로 바뀌는 등 범례와 어긋남 → `lib/chartTheme.ts`의 `maColor(period, fallbackIndex)`로 기간→색 고정 매핑
+- MA가 "기간 필터링된 표시 구간"만으로 계산되어 3M/6M 선택 시 60/120일선이 워밍업 부족으로 비거나 끊김 → `fullRows`(전체 시계열) prop을 추가로 넘겨 워밍업 계산 후 표시 구간만 슬라이스(날짜 매칭, 위치 매칭 아님)
+- 크로스헤어 툴팁(R3 요구)이 옵션만 켜져 있고 실제 구현이 없었음 → `subscribeCrosshairMove`로 날짜·OHLC·거래량·MA값을 보여주는 커스텀 툴팁 구현
+- 상세 뷰의 stale 판정이 달력일 7일 근사치를 써서 R2(3영업일)와 어긋남, IndicatorCard와도 로직이 따로 있었음 → `lib/stale.ts`(pipeline/collect.py의 `_is_stale`과 동일한 영업일 계산)로 통일, 단위 테스트로 요일 고정 검증
+- `decodeURIComponent`가 try/catch 없이 호출되고 ErrorBoundary가 없어 잘못된 해시로 앱 전체가 흰 화면이 될 수 있었음 → try/catch + `ErrorBoundary` 컴포넌트(라우트 변경 시 key로 리셋) 추가
+- PriceChart/FlowsChart의 색상 상수 중복 → `lib/chartTheme.ts`로 공용화
+
+**리뷰를 통과했지만 실제 브라우저 검증에서 발견한 버그**: 크로스헤어 툴팁 div에 `z-index`가 없어 lightweight-charts의 내부 캔버스 레이어에 가려 화면에 전혀 안 보였음(콜백은 정상 호출, `param.point`/`seriesData`도 정상, React state도 정상 — 순수 CSS 스태킹 문제). 이건 정적 코드 리뷰로는 잡히지 않는 유형(런타임에 실제로 렌더링해봐야 보임)이라, **리뷰 자동화가 실제 브라우저 실행 검증을 대체할 수 없다는 근거**로 기록해둔다. `docs-rights.md`나 요구사항 문서 위반이 아니라 순수 렌더링 버그였다.
+
+**브라우저 검증 방법**: `web/public/data/`(gitignore 처리)에 `data/*.json`을 로컬 복사해 Vite dev 서버로 실데이터 확인. 홈 카드 값·등락률·스파크라인, 삼성전자 캔들+거래량+MA 3종+크로스헤어 툴팁, 원/달러 MA 토글, 외국인 순매수 주간+4주MA+툴팁을 스크린샷으로 확인. 브라우저 창 리사이즈 툴이 이 세션에서 반영되지 않아 모바일 반응형은 CSS 미디어쿼리 코드 검토로 대체(디자인 리뷰 에이전트도 브레이크포인트 위반 없음으로 확인).
+
+**배포 시 필요 조치(Stage 4에서 처리)**: 로컬 dev용으로 쓴 `web/public/data/` 복사 방식과 별개로, 실제 배포는 `dist/data/`에 빌드 후 복사하는 방식으로 `deploy.yml`/`collect-and-deploy.yml`을 갱신해야 함(현재 두 워크플로우는 Stage 1 placeholder를 배포하는 상태로 남아있어 Stage 4에서 반드시 갱신).
+
 ## 남은 미결 질문
 
 - [ ] **ECOS 국고채 3년**: 통계표·항목 코드, 단위, 관측일 규약 — 사용자가 `ECOS_API_KEY`를 GitHub Secrets에 등록하면 즉시 재검증
