@@ -14,7 +14,11 @@ import pandas as pd
 import requests
 
 _STAT_CODE = "817Y002"
-_ITEM_CODE = "010200000"  # 국고채 3년 추정 — 미검증
+_ITEM_CODE = "010200000"  # 국고채 3년 추정 — 2026-08-03 실응답으로 값 자체는 정상 범위(1~2%대) 확인
+# 조회 구간(startRow/endRow) — 5년 백필은 영업일 기준 ~1250행. 실측(2026-08-03)에서 1000으로
+# 하드코딩돼 있어 최근 1년치가 통째로 잘리는 버그를 발견(observed_last가 1년 전에 고정)했음.
+# 10년 백필까지 여유를 두고 3000으로 상향.
+_MAX_ROWS = 3000
 
 
 def fetch(indicator_id: str, start: date, end: date) -> pd.DataFrame:
@@ -24,7 +28,7 @@ def fetch(indicator_id: str, start: date, end: date) -> pd.DataFrame:
         raise RuntimeError("ECOS_API_KEY 미설정")
 
     url = (
-        f"https://ecos.bok.or.kr/api/StatisticSearch/{key}/json/kr/1/1000/"
+        f"https://ecos.bok.or.kr/api/StatisticSearch/{key}/json/kr/1/{_MAX_ROWS}/"
         f"{_STAT_CODE}/D/{start.strftime('%Y%m%d')}/{end.strftime('%Y%m%d')}/{_ITEM_CODE}"
     )
     r = requests.get(url, timeout=20)
