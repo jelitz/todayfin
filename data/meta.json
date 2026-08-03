@@ -1,6 +1,21 @@
 {
   "runs": [
     {
+      "profile": "market_hours",
+      "started_at": "2026-08-03T01:34:50.445755+00:00",
+      "results": {
+        "investor_kospi": "ok",
+        "investor_kosdaq": "ok",
+        "kospi": "ok",
+        "kosdaq": "ok",
+        "samsung": "ok",
+        "skhynix": "ok",
+        "usdkrw": "ok",
+        "usdjpy": "ok",
+        "wti": "ok"
+      }
+    },
+    {
       "profile": "preopen",
       "started_at": "2026-08-03T00:09:26.830769+00:00",
       "results": {
