@@ -9,26 +9,9 @@ import Gnb from './components/Gnb'
 import TickerBar from './components/TickerBar'
 import { ThemeProvider, useTheme } from './components/ThemeProvider'
 import { useActiveSection } from './lib/useActiveSection'
+import { parseHash } from './lib/route'
 import { formatDateTimeKST } from './lib/format'
 import './App.css'
-
-/** 현재 hash("#/", "#/i/{id}" 등)를 파싱해 라우트를 계산한다. */
-type Route = { name: 'home' } | { name: 'detail'; id: string }
-
-function parseHash(hash: string): Route {
-  const clean = hash.replace(/^#/, '')
-  const detailMatch = clean.match(/^\/i\/(.+)$/)
-  if (detailMatch) {
-    let id = detailMatch[1]
-    try {
-      id = decodeURIComponent(id)
-    } catch {
-      // 잘못된 %-이스케이프 시퀀스 — 원본 문자열을 그대로 사용(존재하지 않는 id면 Detail이 에러 상태로 처리)
-    }
-    return { name: 'detail', id }
-  }
-  return { name: 'home' }
-}
 
 export default function App() {
   return (
