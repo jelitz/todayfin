@@ -88,7 +88,9 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
     setMaChecked(INITIAL_MA_CHECKED)
     setFlowsWeekly(true)
 
-    fetch(`${import.meta.env.BASE_URL}data/${id}.json`)
+    // 캐시 버스팅 — App.tsx의 summary.json 폴링과 동일한 이유(GitHub Pages CDN·브라우저 캐시로
+    // 장중 준실시간 갱신분이 가려지는 것 방지)
+    fetch(`${import.meta.env.BASE_URL}data/${id}.json?_=${Date.now()}`, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json() as Promise<IndicatorRecord>

@@ -60,7 +60,9 @@ function AppShell() {
     let cancelled = false
 
     const fetchSummary = () => {
-      fetch(`${import.meta.env.BASE_URL}data/summary.json`)
+      // 캐시 버스팅 필수 — GitHub Pages(CDN·브라우저)가 summary.json을 캐시하면 폴링을 걸어도
+      // 실제로는 오래된 응답을 계속 받게 되어 "5분마다 최신화" 요구사항이 무력화된다(배포 직후 실측으로 확인).
+      fetch(`${import.meta.env.BASE_URL}data/summary.json?_=${Date.now()}`, { cache: 'no-store' })
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           return res.json() as Promise<Summary>
