@@ -6,7 +6,6 @@
 
 export const CHART_COLOR_UP = "#d60000";
 export const CHART_COLOR_DOWN = "#0051c7";
-export const CHART_COLOR_LINE = "#000000";
 export const CHART_COLOR_VOLUME = "#d4d4d4";
 
 /** MA 기간 → 색상 고정 매핑. design.md: --ma-1(20일/4주) / --ma-2(60일) / --ma-3(120일). */
@@ -26,17 +25,21 @@ export function maColor(period: number, fallbackIndex: number): string {
 }
 
 /**
- * 차트 배경·그리드·축 텍스트만 테마에 따라 달라진다(데이터 잉크 색상은 위 상수처럼 테마 무관 고정).
- * docs/steering/design.md의 --canvas/--ink-body/--hairline(라이트) · dark 오버라이드 값과 동기화.
+ * 차트 배경·그리드·축 텍스트·단색 라인은 테마에 따라 달라진다(up/down/MA/수급 주체색 같은
+ * "등락 의미"를 담은 데이터 잉크만 위 상수처럼 테마 무관 고정 — line 타입 차트의 단색 선은
+ * 의미 없는 UI색이라 카드 스파크라인의 --ink-charcoal과 동일하게 테마를 따른다).
+ * docs/steering/design.md의 --canvas/--ink-body/--ink-charcoal/--hairline(라이트) · dark
+ * 오버라이드 값과 동기화.
  */
 export function getChartSurfaceTheme(theme: "light" | "dark"): {
   bg: string;
   text: string;
   grid: string;
+  line: string;
 } {
   return theme === "dark"
-    ? { bg: "#141414", text: "#adadad", grid: "#303030" }
-    : { bg: "#ffffff", text: "#595959", grid: "#dbdbdb" };
+    ? { bg: "#141414", text: "#adadad", grid: "#303030", line: "#c2c2c2" }
+    : { bg: "#ffffff", text: "#595959", grid: "#dbdbdb", line: "#525252" };
 }
 
 /** 수급 차트(개인/외국인/기관) 주체별 고정 색상. 외국인이 알상무 기준 핵심 계열이라 가장 눈에 띄는 파랑을 배정. */

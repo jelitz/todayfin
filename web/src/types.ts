@@ -64,14 +64,32 @@ export interface Meta {
   runs: MetaRun[];
 }
 
+export interface HomeSubsection {
+  title: string;
+  ids: string[];
+}
+
+export interface HomeSection {
+  title: string;
+  anchor: string;
+  /** 단일 그리드로 나열할 지표 — subsections와 배타적 */
+  ids?: string[];
+  /** 국가·성격별로 소제목을 나눠 모아 보여줄 때 사용 (예: 거시·통화의 환율/미국 국채/한국 국채) */
+  subsections?: HomeSubsection[];
+}
+
 /** 지표 ID → 홈 화면 섹션 분류 (알상무 4분류). requirements.md R1 순서를 따른다. */
-export const SECTIONS: { title: string; anchor: string; ids: string[] }[] = [
+export const SECTIONS: HomeSection[] = [
   { title: "수급", anchor: "section-flows", ids: ["investor_kospi", "investor_kosdaq"] },
   { title: "시장 가격·추세", anchor: "section-price-trend", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
   {
     title: "거시·통화",
     anchor: "section-macro",
-    ids: ["usdkrw", "usdjpy", "ust2y", "ust10y", "ust30y", "ktb3y"],
+    subsections: [
+      { title: "환율", ids: ["usdkrw", "usdjpy"] },
+      { title: "미국 국채", ids: ["ust2y", "ust10y", "ust30y"] },
+      { title: "한국 국채", ids: ["ktb3y"] },
+    ],
   },
   { title: "원자재", anchor: "section-commodity", ids: ["wti"] },
 ];

@@ -16,7 +16,6 @@ import { sma } from "../lib/ma";
 import {
   CHART_COLOR_UP,
   CHART_COLOR_DOWN,
-  CHART_COLOR_LINE,
   CHART_COLOR_VOLUME,
   getChartSurfaceTheme,
   maColor,
@@ -110,7 +109,7 @@ export default function PriceChart(props: PriceChartProps) {
       }
       const lineRows = rows as LineRow[];
       const lineSeries = chart.addSeries(LineSeries, {
-        color: CHART_COLOR_LINE,
+        color: surface.line,
         lineWidth: 2,
       });
       const data: LineData[] = lineRows.map(([date, value]) => ({

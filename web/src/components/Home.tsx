@@ -10,6 +10,27 @@ export interface HomeProps {
   onSelect: (id: string) => void
 }
 
+function IndicatorGrid({
+  ids,
+  summary,
+  onSelect,
+}: {
+  ids: string[]
+  summary: Summary | null
+  onSelect: (id: string) => void
+}): JSX.Element {
+  return (
+    <div className="home-grid">
+      {summary === null
+        ? ids.map((id) => <div key={id} className="home-skeleton-card" aria-hidden="true" />)
+        : ids
+            .map((id) => summary.indicators.find((ind) => ind.id === id))
+            .filter((ind): ind is SummaryIndicator => ind != null)
+            .map((ind) => <IndicatorCard key={ind.id} indicator={ind} onClick={onSelect} />)}
+    </div>
+  )
+}
+
 export default function Home({ summary, error, onSelect }: HomeProps): JSX.Element {
   if (error) {
     return (
@@ -33,16 +54,16 @@ export default function Home({ summary, error, onSelect }: HomeProps): JSX.Eleme
       {SECTIONS.map((section) => (
         <section key={section.title} id={section.anchor} className="home-section">
           <h2 className="home-section-title">{section.title}</h2>
-          <div className="home-grid">
-            {summary === null
-              ? section.ids.map((id) => (
-                  <div key={id} className="home-skeleton-card" aria-hidden="true" />
-                ))
-              : section.ids
-                  .map((id) => summary.indicators.find((ind) => ind.id === id))
-                  .filter((ind): ind is SummaryIndicator => ind != null)
-                  .map((ind) => <IndicatorCard key={ind.id} indicator={ind} onClick={onSelect} />)}
-          </div>
+          {section.subsections ? (
+            section.subsections.map((sub) => (
+              <div key={sub.title} className="home-subsection">
+                <h3 className="home-subsection-title">{sub.title}</h3>
+                <IndicatorGrid ids={sub.ids} summary={summary} onSelect={onSelect} />
+              </div>
+            ))
+          ) : (
+            <IndicatorGrid ids={section.ids ?? []} summary={summary} onSelect={onSelect} />
+          )}
         </section>
       ))}
     </div>
