@@ -7,9 +7,8 @@
 - ✅ docs/data-rights.md 초안
 - ✅ GitHub public repo 생성·push (https://github.com/jelitz/todayfin)
 - ✅ 사용자: ECOS 키(2026-08-03 등록·검증 완료)·FRED 키(등록 완료) 신청
-- 🔶 사용자: KRX Open API 인증키 발급 완료(2026-08-03) — 코스피/코스닥 지수·유가증권
-  일별매매정보 3개 API 활용신청·승인 대기 중 (`pipeline/sources/krx.py` 구현 완료,
-  미승인 시 자동 FDR 폴백)
+- ✅ 사용자: KRX Open API 인증키 발급 + 코스피/코스닥 지수·유가증권 일별매매정보
+  3개 API 활용신청·승인 완료(2026-08-03) — `pipeline/sources/krx.py` 실응답 검증 완료
 
 ## Stage 1 — 클라우드 워킹 스켈레톤 + 소스 스파이크
 - ✅ 소스별 최소 fetch 스크립트 (pipeline/spike.py: naver/fdr/stooq/yfinance/treasury/ecos)
@@ -64,8 +63,9 @@
 
 ## 2단계 (범위 외 백로그)
 - ⬜ 기준일 선택 누적수익률 비교 (롱숏 상대강도)
-- 🔶 KRX Open API 전환 — 코드는 2026-08-03 완료(`pipeline/sources/krx.py`,
-  코스피/코스닥/삼전/하이닉스 1순위, FDR 폴백). API별 활용신청 승인 대기 중,
-  승인 후 실응답으로 필드명 재검증 필요 (수급은 KRX Open API에 해당 서비스 없어 전환 대상 아님)
+- ✅ KRX Open API 전환 — 2026-08-03 완료(`pipeline/sources/krx.py`, 코스피/코스닥/
+  삼전/하이닉스 1순위, FDR 폴백). 활용신청 승인 완료, 실응답으로 4개 지표 전부
+  `status: ok` 확인(run 30780814683) + 브라우저 검증 완료 (수급은 KRX Open API에
+  해당 서비스 없어 전환 대상 아님, 네이버 유지)
 - ⬜ ECOS 매매기준율 별도 지표, 수급 세부 주체(연기금 등), 알림, 커스텀 도메인
 - ⬜ 헤더 아래 실시간 티커 바 재도입 (2026-08-03 3차 피드백으로 보류 — 코드는 커밋 `a7789d7`에 보존)

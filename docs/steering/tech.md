@@ -24,7 +24,7 @@
 | 지표 | 1순위 | 동일-정의 폴백 | 키 |
 |------|-------|---------------|-----|
 | 수급(외인/주체별) | 네이버 investorDealTrendDay | pykrx(로컬 수동) | 불필요 |
-| 코스피/코스닥/삼전/하이닉스 | KRX Open API(공식, 승인 대기 중) + 네이버 실시간 폴링(오늘 장중, market_hours 프로필 한정) | FinanceDataReader(확정 일봉) | KRX 필요(미승인 시 자동 FDR 폴백) |
+| 코스피/코스닥/삼전/하이닉스 | KRX Open API(공식, 2026-08-03 승인 완료) + 네이버 실시간 폴링(오늘 장중, market_hours 프로필 한정) | FinanceDataReader(확정 일봉) | KRX 필요(실패 시 자동 FDR 폴백) |
 | USD/KRW, USD/JPY | yfinance (KRW=X, JPY=X) | — (실패 시 stale) | 불필요 |
 | 미국채 10년 | 재무부 Daily Par Yield CSV | FRED DGS10(보정) | FRED만 필요 |
 | 국고채 3년 | ECOS Open API | 없음(stale) | ECOS 필수 |
@@ -32,7 +32,7 @@
 
 배경: KRX 정보데이터시스템 2026-02 로그인 필수화(pykrx 클라우드 부적합), FDR 0.9.110+ GitHub 캐시 전환. **Stooq는 2026년 도입된 봇 방지 챌린지로 완전 폐기(로컬·Actions 양쪽 확인)** — 원래 폴백이던 yfinance가 Stage 1 클라우드 실측에서 정상 동작해 1순위로 승격. 상세·근거는 `docs/data-rights.md`, Stage 1 결과는 `docs/specs/dashboard-mvp/implemented.md`.
 
-2026-08-03: KRX Open API(`pipeline/sources/krx.py`)를 코스피/코스닥/삼전/하이닉스 1순위로 전환, FDR을 폴백으로 강등(데이터 권리상 공식 API가 FDR보다 우선 — `docs/data-rights.md` 참조). 인증키는 발급됐으나 API별 개별 활용신청·승인이 별도 필요한 구조라 승인 전에는 매 수집마다 401로 실패 후 자동으로 FDR 폴백 사용(`status: ok_fallback`). 수급(investor_kospi/investor_kosdaq)은 KRX Open API 서비스 목록에 해당 API가 없어 전환 대상 아님 — 네이버 소스 유지.
+2026-08-03: KRX Open API(`pipeline/sources/krx.py`)를 코스피/코스닥/삼전/하이닉스 1순위로 전환, FDR을 폴백으로 강등(데이터 권리상 공식 API가 FDR보다 우선 — `docs/data-rights.md` 참조). API별 활용신청·승인 완료 후 GitHub Actions 실응답(run 30780814683)으로 4개 지표 전부 `status: ok`(폴백 없이 KRX 직접 성공) 확인, 프론트 홈·상세(캔들+MA+크로스헤어) 브라우저 검증 완료. 수급(investor_kospi/investor_kosdaq)은 KRX Open API 서비스 목록에 해당 API가 없어 전환 대상 아님 — 네이버 소스 유지.
 
 ## 운영
 
