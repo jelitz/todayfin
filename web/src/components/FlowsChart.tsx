@@ -9,7 +9,8 @@ import {
 } from "lightweight-charts";
 import type { FlowsRow } from "../types";
 import { toWeekly } from "../lib/weekly";
-import { CHART_BG, CHART_TEXT, CHART_GRID, FLOWS_SUBJECT_COLORS } from "../lib/chartTheme";
+import { getChartSurfaceTheme, FLOWS_SUBJECT_COLORS } from "../lib/chartTheme";
+import { useTheme } from "./ThemeProvider";
 
 export interface FlowsChartProps {
   /** 화면에 표시할(기간 필터링된) 행 — [date, individual, foreign, institution], date 오름차순 */
@@ -40,6 +41,8 @@ export default function FlowsChart(props: FlowsChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const { theme } = useTheme();
+  const surface = getChartSurfaceTheme(theme);
 
   const isEmpty = rows.length === 0;
 
@@ -51,21 +54,21 @@ export default function FlowsChart(props: FlowsChartProps) {
       width: containerRef.current.clientWidth,
       height,
       layout: {
-        background: { color: CHART_BG },
-        textColor: CHART_TEXT,
+        background: { color: surface.bg },
+        textColor: surface.text,
       },
       grid: {
-        vertLines: { color: CHART_GRID },
-        horzLines: { color: CHART_GRID },
+        vertLines: { color: surface.grid },
+        horzLines: { color: surface.grid },
       },
       crosshair: {
         mode: 0,
       },
       timeScale: {
-        borderColor: CHART_GRID,
+        borderColor: surface.grid,
       },
       rightPriceScale: {
-        borderColor: CHART_GRID,
+        borderColor: surface.grid,
       },
     });
     chartRef.current = chart;
@@ -125,7 +128,7 @@ export default function FlowsChart(props: FlowsChartProps) {
       chart.remove();
       chartRef.current = null;
     };
-  }, [rows, mode, height, isEmpty]);
+  }, [rows, mode, height, isEmpty, theme]);
 
   if (isEmpty) {
     return <div>표시할 데이터가 없습니다</div>;
@@ -137,7 +140,7 @@ export default function FlowsChart(props: FlowsChartProps) {
         {SUBJECTS.map((s) => (
           <span
             key={s.key}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: CHART_TEXT }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: surface.text }}
           >
             <span
               style={{ width: 8, height: 8, borderRadius: "50%", background: s.color, display: "inline-block" }}
@@ -154,19 +157,19 @@ export default function FlowsChart(props: FlowsChartProps) {
             zIndex: 10,
             left: Math.min(tooltip.x + 12, (containerRef.current?.clientWidth ?? 300) - 140),
             top: 8,
-            background: CHART_BG,
-            border: `1px solid ${CHART_GRID}`,
+            background: surface.bg,
+            border: `1px solid ${surface.grid}`,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 12,
             lineHeight: 1.5,
-            color: CHART_TEXT,
+            color: surface.text,
             pointerEvents: "none",
             whiteSpace: "nowrap",
             boxShadow: "none",
           }}
         >
-          <div style={{ color: "#000", fontWeight: 600, marginBottom: 2 }}>{tooltip.date}</div>
+          <div style={{ color: surface.text, fontWeight: 600, marginBottom: 2 }}>{tooltip.date}</div>
           {tooltip.lines.map((l) => (
             <div key={l.label} style={{ color: l.color }}>
               {l.label} {l.value}

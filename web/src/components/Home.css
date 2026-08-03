@@ -59,7 +59,7 @@
 
 .home-skeleton-card {
   min-height: 160px;
-  background: var(--surface-soft);
+  background: var(--surface-2);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card);
 }

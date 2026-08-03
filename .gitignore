@@ -25,6 +25,9 @@ Thumbs.db
 # 로컬 dev 서버 검증용 데이터 사본 (배포 시 CI가 dist/data로 복사 — 여기엔 커밋 안 함)
 web/public/data/
 
+# 브레인스토밍 시각 컴패니언 임시 목업
+.superpowers/
+
 # 수집 임시 영역 (원자적 교체 전 스테이징)
 pipeline/.staging/
 pipeline/spike-result.json

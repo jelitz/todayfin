@@ -1,30 +1,37 @@
 /* 디자인 토큰 — docs/steering/design.md 원본. 값을 바꿀 때는 두 곳을 함께 수정할 것. */
 
 :root {
-  /* 표면 */
+  /* UI 크롬 — 라이트 (기본값) */
   --canvas: #ffffff;
-  --surface-soft: #fafafa;
-  --surface-dark: #171717;
-  /* 텍스트 */
+  --surface: #f5f5f5;
+  --surface-2: #fafafa;
   --ink: #000000;
-  --ink-charcoal: #525252;
-  --ink-body: #737373;
-  --ink-muted: #a3a3a3;
-  --on-dark: #ffffff;
-  --on-dark-mute: rgba(255, 255, 255, 0.7);
-  /* 보더 */
-  --hairline: #e5e5e5;
-  --hairline-strong: #d4d4d4;
-  /* 데이터 잉크 (차트 전용 — UI 크롬 사용 금지) */
+  --ink-body: #595959;
+  --ink-muted: #8c8c8c;
+  --hairline: #dbdbdb;
+  --hairline-soft: #f0f0f0;
+  --accent: #12467b;
+  --accent-hover: #2a5b87;
+  --accent-active: #082b54;
+  --accent-soft: #c7dff7;
+  --accent-soft-bg: #eaf3fc;
+  --on-accent: #ffffff; /* accent 배경 위 텍스트 — 라이트/다크 공통(두 테마 모두 accent가 충분히 어두워 흰 텍스트로 대비 확보) */
+  --focus-ring: rgba(18, 70, 123, 0.5);
+  /* surface-dark/on-dark 표면 예외는 전역 다크모드 도입으로 대체됨 (docs/steering/design.md 참조) */
+
+  /* 데이터 잉크 (차트·등락 전용 — UI 크롬 사용 금지, 라이트/다크 완전 동일 값 — 절대 재정의 금지) */
   --up: #d60000;
   --down: #0051c7;
   --ma-1: #f59e0b;
   --ma-2: #10b981;
   --ma-3: #8b5cf6;
-  --focus-ring: rgba(59, 130, 246, 0.5);
+  --flow-individual: #a3a3a3;
+  --flow-foreign: #0051c7;
+  --flow-institution: #f59e0b;
+
   /* 형태·간격 */
-  --radius-card: 12px;
-  --radius-pill: 9999px;
+  --radius-card: 8px;
+  --radius-control: 8px;
   --space-unit: 8px;
   --space-section: 88px;
   --pad-card: 32px;
@@ -43,6 +50,24 @@
   --font-sans: "Pretendard Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+:root[data-theme='dark'] {
+  --canvas: #141414;
+  --surface: #1d1d1d;
+  --surface-2: #1a1a1a;
+  --ink: #f0f0f0;
+  --ink-body: #adadad;
+  --ink-muted: #7e7e7e;
+  --hairline: #3e3e3e;
+  --hairline-soft: #303030;
+  --accent: #4f8fc4;
+  --accent-hover: #6ba6d6;
+  --accent-active: #3a7ab0;
+  --accent-soft: #275076;
+  --accent-soft-bg: #1a2c3a;
+  --focus-ring: rgba(79, 143, 196, 0.6);
+  /* --up/--down/--ma-1..3/--flow-* 는 의도적으로 재정의하지 않음 — 데이터 잉크는 테마 무관 고정 */
+}
+
 * {
   box-sizing: border-box;
 }
@@ -56,6 +81,7 @@ body {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 body {
@@ -82,7 +108,7 @@ input:focus-visible {
 }
 
 ::selection {
-  background: var(--hairline-strong);
+  background: var(--accent-soft);
 }
 
 .up {

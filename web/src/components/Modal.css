@@ -36,7 +36,7 @@
   right: 16px;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-control);
   border: 1px solid var(--hairline);
   background: var(--canvas);
   color: var(--ink-body);
@@ -49,8 +49,8 @@
 }
 
 .modal-close:hover {
-  border-color: var(--ink-muted);
-  color: var(--ink);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 @media (max-width: 640px) {

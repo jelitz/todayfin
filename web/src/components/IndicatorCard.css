@@ -1,6 +1,6 @@
 .indicator-card {
   position: relative;
-  background: var(--canvas);
+  background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: var(--radius-card);
   padding: var(--pad-card);
@@ -13,13 +13,13 @@
 
 .indicator-card:hover,
 .indicator-card:focus-visible {
-  border-color: var(--ink);
+  border-color: var(--accent);
 }
 
 .indicator-card:hover .indicator-card-expand,
 .indicator-card:focus-visible .indicator-card-expand {
-  color: var(--ink);
-  border-color: var(--ink);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .indicator-card-expand {
@@ -28,8 +28,8 @@
   right: var(--pad-card);
   width: 24px;
   height: 24px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--hairline);
   color: var(--ink-muted);
   display: flex;
   align-items: center;
@@ -66,7 +66,7 @@
 
 .indicator-card-change {
   font-size: var(--fs-body-sm);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .indicator-card-spark {
@@ -90,8 +90,8 @@
 
 .indicator-card-badge {
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-control);
   padding: 2px 10px;
   color: var(--ink-muted);
-  background: var(--surface-soft);
+  background: var(--surface-2);
 }

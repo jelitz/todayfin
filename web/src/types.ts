@@ -65,9 +65,13 @@ export interface Meta {
 }
 
 /** 지표 ID → 홈 화면 섹션 분류 (알상무 4분류). requirements.md R1 순서를 따른다. */
-export const SECTIONS: { title: string; ids: string[] }[] = [
-  { title: "수급", ids: ["investor_kospi", "investor_kosdaq"] },
-  { title: "시장 가격·추세", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
-  { title: "거시·통화", ids: ["usdkrw", "usdjpy", "ust2y", "ust10y", "ust30y", "ktb3y"] },
-  { title: "원자재", ids: ["wti"] },
+export const SECTIONS: { title: string; anchor: string; ids: string[] }[] = [
+  { title: "수급", anchor: "section-flows", ids: ["investor_kospi", "investor_kosdaq"] },
+  { title: "시장 가격·추세", anchor: "section-price-trend", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
+  {
+    title: "거시·통화",
+    anchor: "section-macro",
+    ids: ["usdkrw", "usdjpy", "ust2y", "ust10y", "ust30y", "ktb3y"],
+  },
+  { title: "원자재", anchor: "section-commodity", ids: ["wti"] },
 ];

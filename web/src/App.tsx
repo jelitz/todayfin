@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { Summary } from './types'
+import { SECTIONS } from './types'
 import Home from './components/Home'
 import Detail from './components/Detail'
 import Modal from './components/Modal'
 import ErrorBoundary from './components/ErrorBoundary'
+import Gnb from './components/Gnb'
+import TickerBar from './components/TickerBar'
+import { ThemeProvider, useTheme } from './components/ThemeProvider'
+import { useActiveSection } from './lib/useActiveSection'
 import { formatDateTimeKST } from './lib/format'
 import './App.css'
 
@@ -26,9 +31,19 @@ function parseHash(hash: string): Route {
 }
 
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
+  )
+}
+
+function AppShell() {
   const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash))
   const [summary, setSummary] = useState<Summary | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
+  const { theme, toggleTheme } = useTheme()
+  const activeAnchor = useActiveSection(SECTIONS.map((s) => s.anchor))
 
   useEffect(() => {
     const onHashChange = () => setRoute(parseHash(window.location.hash))
@@ -58,12 +73,19 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div className="app-header-inner">
-          <span className="app-logo">todayfin</span>
-          {summary && <span className="app-updated">마지막 갱신: {formatDateTimeKST(summary.generated_at)}</span>}
-        </div>
-      </header>
+      <Gnb
+        sections={SECTIONS}
+        activeAnchor={activeAnchor}
+        updatedAtLabel={summary ? formatDateTimeKST(summary.generated_at) : null}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+      <TickerBar
+        summary={summary}
+        onSelect={(id) => {
+          window.location.hash = `#/i/${id}`
+        }}
+      />
 
       <main className="app-main">
         <ErrorBoundary key="home">

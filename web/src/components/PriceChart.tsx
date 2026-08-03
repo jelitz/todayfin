@@ -18,11 +18,10 @@ import {
   CHART_COLOR_DOWN,
   CHART_COLOR_LINE,
   CHART_COLOR_VOLUME,
-  CHART_BG,
-  CHART_TEXT,
-  CHART_GRID,
+  getChartSurfaceTheme,
   maColor,
 } from "../lib/chartTheme";
+import { useTheme } from "./ThemeProvider";
 
 export interface PriceChartProps {
   type: "ohlcv" | "line";
@@ -56,6 +55,8 @@ export default function PriceChart(props: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const { theme } = useTheme();
+  const surface = getChartSurfaceTheme(theme);
 
   const isEmpty = rows.length === 0;
 
@@ -67,21 +68,21 @@ export default function PriceChart(props: PriceChartProps) {
       width: containerRef.current.clientWidth,
       height,
       layout: {
-        background: { color: CHART_BG },
-        textColor: CHART_TEXT,
+        background: { color: surface.bg },
+        textColor: surface.text,
       },
       grid: {
-        vertLines: { color: CHART_GRID },
-        horzLines: { color: CHART_GRID },
+        vertLines: { color: surface.grid },
+        horzLines: { color: surface.grid },
       },
       crosshair: {
         mode: 0,
       },
       timeScale: {
-        borderColor: CHART_GRID,
+        borderColor: surface.grid,
       },
       rightPriceScale: {
-        borderColor: CHART_GRID,
+        borderColor: surface.grid,
       },
     });
     chartRef.current = chart;
@@ -180,12 +181,12 @@ export default function PriceChart(props: PriceChartProps) {
         const d = param.seriesData.get(mainSeries);
         if (d) {
           if ("open" in d) {
-            lines.push({ label: "시가", value: formatNum(d.open), color: CHART_TEXT });
-            lines.push({ label: "고가", value: formatNum(d.high), color: CHART_TEXT });
-            lines.push({ label: "저가", value: formatNum(d.low), color: CHART_TEXT });
-            lines.push({ label: "종가", value: formatNum(d.close), color: CHART_TEXT });
+            lines.push({ label: "시가", value: formatNum(d.open), color: surface.text });
+            lines.push({ label: "고가", value: formatNum(d.high), color: surface.text });
+            lines.push({ label: "저가", value: formatNum(d.low), color: surface.text });
+            lines.push({ label: "종가", value: formatNum(d.close), color: surface.text });
           } else if ("value" in d) {
-            lines.push({ label: "값", value: formatNum(d.value), color: CHART_TEXT });
+            lines.push({ label: "값", value: formatNum(d.value), color: surface.text });
           }
         }
       }
@@ -225,7 +226,7 @@ export default function PriceChart(props: PriceChartProps) {
       chart.remove();
       chartRef.current = null;
     };
-  }, [rows, fullRows, type, maPeriods, showVolume, height, isEmpty]);
+  }, [rows, fullRows, type, maPeriods, showVolume, height, isEmpty, theme]);
 
   if (isEmpty) {
     return <div>표시할 데이터가 없습니다</div>;
@@ -241,19 +242,19 @@ export default function PriceChart(props: PriceChartProps) {
             zIndex: 10,
             left: Math.min(tooltip.x + 12, (containerRef.current?.clientWidth ?? 300) - 140),
             top: 8,
-            background: CHART_BG,
-            border: `1px solid ${CHART_GRID}`,
+            background: surface.bg,
+            border: `1px solid ${surface.grid}`,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 12,
             lineHeight: 1.5,
-            color: CHART_TEXT,
+            color: surface.text,
             pointerEvents: "none",
             whiteSpace: "nowrap",
             boxShadow: "none",
           }}
         >
-          <div style={{ color: "#000", fontWeight: 600, marginBottom: 2 }}>{tooltip.date}</div>
+          <div style={{ color: surface.text, fontWeight: 600, marginBottom: 2 }}>{tooltip.date}</div>
           {tooltip.lines.map((l) => (
             <div key={l.label} style={{ color: l.color }}>
               {l.label} {l.value}

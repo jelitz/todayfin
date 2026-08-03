@@ -31,8 +31,8 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
             href={`${import.meta.env.BASE_URL}#/`}
             style={{
               display: 'inline-block',
-              borderRadius: 'var(--radius-pill)',
-              border: '1px solid var(--hairline-strong)',
+              borderRadius: 'var(--radius-control)',
+              border: '1px solid var(--hairline)',
               background: 'var(--canvas)',
               color: 'var(--ink)',
               padding: '8px 20px',

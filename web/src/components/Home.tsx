@@ -31,7 +31,7 @@ export default function Home({ summary, error, onSelect }: HomeProps): JSX.Eleme
         데이터를 매일 루틴하게 확인하는 훈련을 통해 시장을 읽는 감각을 기르는 것이 목표입니다.
       </p>
       {SECTIONS.map((section) => (
-        <section key={section.title} className="home-section">
+        <section key={section.title} id={section.anchor} className="home-section">
           <h2 className="home-section-title">{section.title}</h2>
           <div className="home-grid">
             {summary === null

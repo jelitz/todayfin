@@ -4,41 +4,6 @@
   flex-direction: column;
 }
 
-.app-header {
-  background: var(--surface-dark);
-  border-bottom: 1px solid var(--surface-dark);
-}
-
-.app-header-inner {
-  max-width: var(--max-width-dashboard);
-  margin: 0 auto;
-  padding: calc(var(--space-unit) * 2) var(--pad-card-mobile);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-unit);
-}
-
-@media (min-width: 850px) {
-  .app-header-inner {
-    padding-left: var(--pad-card);
-    padding-right: var(--pad-card);
-  }
-}
-
-.app-logo {
-  font-size: var(--fs-heading-sm);
-  font-weight: 700;
-  color: var(--on-dark);
-  letter-spacing: -0.01em;
-}
-
-.app-updated {
-  font-size: var(--fs-caption-sm);
-  color: var(--on-dark-mute);
-  white-space: nowrap;
-}
-
 .app-main {
   flex: 1 0 auto;
 }
