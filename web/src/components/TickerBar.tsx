@@ -47,9 +47,11 @@ export default function TickerBar({ summary, onSelect }: TickerBarProps): JSX.El
   return (
     <div className="ticker-bar">
       <span className="ticker-label muted">{formatDateTimeKST(summary.generated_at)} 기준</span>
-      <div className="ticker-track">
-        {items.map((i) => renderItem(i, `a-${i.id}`))}
-        {items.map((i) => renderItem(i, `b-${i.id}`))}
+      <div className="ticker-viewport">
+        <div className="ticker-track">
+          {items.map((i) => renderItem(i, `a-${i.id}`))}
+          {items.map((i) => renderItem(i, `b-${i.id}`))}
+        </div>
       </div>
     </div>
   )

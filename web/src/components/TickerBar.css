@@ -15,6 +15,15 @@
   white-space: nowrap;
 }
 
+.ticker-viewport {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
 .ticker-track {
   display: flex;
   white-space: nowrap;
