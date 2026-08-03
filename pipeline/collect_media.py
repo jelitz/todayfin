@@ -24,8 +24,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sources import youtube_rss  # noqa: E402
 
 _CHANNEL_ID = "UCiDmfbYvuMEVbRxPmFP4sng"  # 알상무
-_RETRIES = 2
-_RETRY_DELAYS = [5, 15]
+# 유튜브 RSS는 짧은 간격 반복 호출 시 404/500을 간헐적으로 돌려주고 수십 초 뒤 복구된다
+# (2026-08-03 실측 — sources/youtube_rss.py 주석 참조). 주가 소스(5·15초)보다 길게 잡는다.
+_RETRIES = 4
+_RETRY_DELAYS = [10, 30, 60, 90]
 _REQUIRED_VIDEO_FIELDS = ("video_id", "title", "watch_url")
 
 

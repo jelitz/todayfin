@@ -29,6 +29,17 @@ _CHANNEL_URL = "https://www.youtube.com/channel/{channel_id}"
 _WATCH_URL = "https://www.youtube.com/watch?v={video_id}"
 _TIMEOUT = 20
 
+# 이 엔드포인트는 짧은 간격으로 반복 호출하면 404/500을 간헐적으로 돌려준다(2026-08-03 실측:
+# UA 유무와 무관하게 동일 시점에 같은 코드가 나옴 — 404, 200, 404 순으로 교대). 수십 초 쉬면
+# 복구되므로 재시도 백오프로 대응한다(collect_media._RETRY_DELAYS). UA는 다른 소스 어댑터
+# (treasury.py·naver.py)와의 일관성을 위해 붙여둔 것이고 404 회피 효과는 확인되지 않았다.
+_UA = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+    )
+}
+
 
 def _text(element, path: str) -> str | None:
     found = element.find(path, _NS)
@@ -76,7 +87,7 @@ def parse_feed(xml_text: str) -> dict:
 
 def fetch(channel_id: str) -> dict:
     """채널 RSS를 가져와 파싱한다. 반환: {channel_name, channel_url, videos}."""
-    r = requests.get(_FEED_URL.format(channel_id=channel_id), timeout=_TIMEOUT)
+    r = requests.get(_FEED_URL.format(channel_id=channel_id), headers=_UA, timeout=_TIMEOUT)
     r.raise_for_status()
     parsed = parse_feed(r.text)
     return {

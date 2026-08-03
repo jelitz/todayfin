@@ -43,7 +43,11 @@ def test_collect_preserves_existing_file_on_fetch_failure(tmp_path):
     with open(tmp_path / "youtube.json", "w", encoding="utf-8") as f:
         json.dump(existing, f, ensure_ascii=False)
 
-    with patch("collect_media.youtube_rss.fetch", side_effect=RuntimeError("네트워크 오류")):
+    # time.sleep 목킹 — 실제 재시도 백오프(10·30·60·90초)를 그대로 기다리면 테스트가 190초 걸린다
+    with (
+        patch("collect_media.youtube_rss.fetch", side_effect=RuntimeError("네트워크 오류")),
+        patch("collect_media.time.sleep"),
+    ):
         code = collect_media.collect(str(tmp_path))
 
     # 실패해도 exit 0 — 영상 미업로드·일시적 RSS 장애는 정상 범주(requirements.md R5)
