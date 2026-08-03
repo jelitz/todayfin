@@ -1,0 +1,88 @@
+name: Collect media (youtube RSS)
+
+# 알상무 유튜브 채널 RSS를 매시간 가져와 data/youtube.json을 갱신하고 Pages까지 배포한다.
+# 주가 데이터 파이프라인(collect-and-deploy.yml)과 스케줄·장애를 완전히 분리한다 —
+# RSS 파싱 실패가 대시보드 배포에 영향을 주지 않게 하기 위함
+# (docs/specs/content-pages/design.md 참조).
+#
+# GITHUB_TOKEN 커밋은 후속 워크플로우를 트리거하지 않으므로 배포를 이 잡 안에서 완결한다.
+# cron "25 * * * *": 매시 25분 — 정각 회피 + 기존 워크플로우들과 시간대 비중복.
+
+on:
+  schedule:
+    - cron: "25 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  collect-media:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install requests defusedxml
+
+      - name: Collect media
+        run: python pipeline/collect_media.py
+
+      - name: Commit data
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/youtube.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "no media changes to commit"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git commit -m "data: youtube sync $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.commit.outputs.changed == 'true'
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build site
+        if: steps.commit.outputs.changed == 'true'
+        run: |
+          cd web
+          npm ci
+          npm run build
+          mkdir -p dist/data
+          cp -r ../data/. dist/data/
+
+      - name: Configure Pages
+        if: steps.commit.outputs.changed == 'true'
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload artifact
+        if: steps.commit.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: web/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        if: steps.commit.outputs.changed == 'true'
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
