@@ -46,10 +46,9 @@ export default function Home({ summary, error, onSelect }: HomeProps): JSX.Eleme
   return (
     <div className="home">
       <p className="home-intro">
-        이 사이트는 유튜브 채널 <strong>알상무</strong>가 강조해 온 &ldquo;매일 지표를 확인하는 투자
-        습관&rdquo;에서 출발했습니다. 시황에 따라 말이 바뀌는 코멘트 대신, 기관 투자자들이 매일 아침 확인하는
-        핵심 지표를 스스로 살펴보며 자신만의 판단 기준을 세울 수 있도록 돕습니다. 종목을 추천하는 곳이 아니라,
-        데이터를 매일 루틴하게 확인하는 훈련을 통해 시장을 읽는 감각을 기르는 것이 목표입니다.
+        시황에 따라 말이 바뀌는 코멘트 대신, 기관 투자자들이 매일 아침 확인하는 핵심 지표를 스스로
+        살펴보며 자신만의 판단 기준을 세울 수 있도록 돕습니다. 종목을 추천하는 곳이 아니라, 데이터를
+        매일 루틴하게 확인하는 훈련을 통해 시장을 읽는 감각을 기르는 것이 목표입니다.
       </p>
       {SECTIONS.map((section) => (
         <section key={section.title} id={section.anchor} className="home-section">

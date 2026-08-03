@@ -21,7 +21,7 @@ const PERIOD_PRESETS: { key: PeriodKey; label: string; days: number }[] = [
   { key: '5Y', label: '5Y', days: 365 * 5 },
 ]
 
-/** ohlcv·line 전 지표 공통 MA 기간 (사용자 피드백 2026-08-03: 일부 지표만 MA가 있던 것을 통일). */
+/** ohlcv(캔들) 지표 전용 MA 기간. line 지표(환율·국채·WTI)는 2026-08-03 사용자 피드백으로 제외. */
 const MA_PERIODS = [20, 60, 120] as const
 
 /** requirements.md R1: 캔들+거래량이 필요한 지표(코스피/코스닥은 캔들만). */
@@ -119,11 +119,8 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
     [record, periodDays],
   )
   const maPeriods = useMemo<number[]>(() => {
-    if (!record) return []
-    if (record.type === 'ohlcv' || record.type === 'line') {
-      return MA_PERIODS.filter((p) => maChecked[p])
-    }
-    return []
+    if (!record || record.type !== 'ohlcv') return []
+    return MA_PERIODS.filter((p) => maChecked[p])
   }, [record, maChecked])
 
   if (loading) {
@@ -194,7 +191,7 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
           ))}
         </div>
 
-        {(record.type === 'ohlcv' || record.type === 'line') && (
+        {record.type === 'ohlcv' && (
           <div className="detail-ma-group" role="group" aria-label="이동평균선">
             {MA_PERIODS.map((p) => (
               <label key={p} className="detail-ma-option">
