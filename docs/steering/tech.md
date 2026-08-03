@@ -8,7 +8,7 @@
 | 프론트 | Vite + React + TypeScript | 정적 빌드 |
 | 차트 | TradingView Lightweight Charts | 캔들·MA 오버레이·크로스헤어 |
 | 폰트 | Pretendard Variable (OFL) | 수치는 tabular-nums |
-| 자동화 | GitHub Actions cron 2회/일 | 장전 `10 23 * * 0-5`, 장후 `40 9 * * 1-5` (UTC) |
+| 자동화 | GitHub Actions cron | 장전 `10 23 * * 0-5`, 장후 `40 9 * * 1-5` (UTC) + 정규장 중 준실시간 `*/30 0-6 * * 1-5`(UTC, 9개 지표만) |
 | 호스팅 | GitHub Pages (public repo) | actions/deploy-pages로 잡 내 직접 배포 |
 | 저장 | repo 내 JSON (`data/`) | DB 없음. 도입 기준: 지표 30개+ 또는 일중 데이터 필요 시 재검토 |
 
@@ -24,7 +24,7 @@
 | 지표 | 1순위 | 동일-정의 폴백 | 키 |
 |------|-------|---------------|-----|
 | 수급(외인/주체별) | 네이버 investorDealTrendDay | pykrx(로컬 수동) | 불필요 |
-| 코스피/코스닥/삼전/하이닉스 | FinanceDataReader | 네이버 시세 | 불필요 |
+| 코스피/코스닥/삼전/하이닉스 | FinanceDataReader(확정 일봉) + 네이버 실시간 폴링(오늘 장중, market_hours 프로필 한정) | 네이버 시세 | 불필요 |
 | USD/KRW, USD/JPY | yfinance (KRW=X, JPY=X) | — (실패 시 stale) | 불필요 |
 | 미국채 10년 | 재무부 Daily Par Yield CSV | FRED DGS10(보정) | FRED만 필요 |
 | 국고채 3년 | ECOS Open API | 없음(stale) | ECOS 필수 |

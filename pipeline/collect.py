@@ -89,45 +89,73 @@ def _result(indicator_id: str, status: str, existing: dict | None, note: str) ->
     }
 
 
+def _collect_realtime_snapshot(
+    indicator_id: str, spec: dict, existing: dict | None
+) -> tuple[pd.DataFrame, list[str]]:
+    """market_hours 프로필 전용 경로 — 오늘 하루치 스냅샷 1행만 받아 기존 시계열의 오늘 행과 교체."""
+    snapshot = spec["realtime_module"].fetch_today(indicator_id)
+    new_df = pd.DataFrame([snapshot])
+    warnings = validators.validate("ohlcv", new_df)
+    if existing and existing.get("series"):
+        old_df = _series_to_df(spec, existing)
+        merged = pd.concat([old_df[old_df["date"] != snapshot["date"]], new_df], ignore_index=True)
+    else:
+        merged = new_df
+    return merged, warnings
+
+
 def collect_one(
-    indicator_id: str, data_dir: str, backfill_years: int, backfill_days: int | None
+    indicator_id: str,
+    data_dir: str,
+    backfill_years: int,
+    backfill_days: int | None,
+    profile: str = "all",
 ) -> dict:
     spec = INDICATORS[indicator_id]
     existing = _load_existing(data_dir, indicator_id)
     today = date.today()
-    backfill_start = (
-        today - timedelta(days=backfill_days)
-        if backfill_days is not None
-        else today - timedelta(days=365 * backfill_years)
-    )
-
-    if existing and existing.get("series"):
-        last_date = date.fromisoformat(existing["series"][-1][0])
-        start = max(last_date - timedelta(days=_REVISION_LOOKBACK_DAYS), backfill_start)
-    else:
-        start = backfill_start
-    end = today
 
     used_fallback = False
-    try:
-        new_df = _fetch_with_retry(spec["module"], indicator_id, start, end)
-        warnings = validators.validate(spec["type"], new_df, spec.get("columns"))
-    except Exception as e:  # noqa: BLE001
-        fallback = spec.get("fallback_module")
-        if fallback is None:
-            return _result(indicator_id, "failed", existing, str(e))
-        try:
-            new_df = _fetch_with_retry(fallback, indicator_id, start, end)
-            warnings = validators.validate(spec["type"], new_df, spec.get("columns"))
-            used_fallback = True
-        except Exception as e2:  # noqa: BLE001
-            return _result(indicator_id, "failed", existing, f"1차 실패({e}) / 폴백 실패({e2})")
 
-    if existing and existing.get("series"):
-        old_df = _series_to_df(spec, existing)
-        merged = pd.concat([old_df[old_df["date"] < new_df["date"].min()], new_df], ignore_index=True)
+    if profile == "market_hours" and spec.get("realtime_module"):
+        try:
+            merged, warnings = _collect_realtime_snapshot(indicator_id, spec, existing)
+        except Exception as e:  # noqa: BLE001
+            return _result(indicator_id, "failed", existing, str(e))
     else:
-        merged = new_df
+        backfill_start = (
+            today - timedelta(days=backfill_days)
+            if backfill_days is not None
+            else today - timedelta(days=365 * backfill_years)
+        )
+
+        if existing and existing.get("series"):
+            last_date = date.fromisoformat(existing["series"][-1][0])
+            start = max(last_date - timedelta(days=_REVISION_LOOKBACK_DAYS), backfill_start)
+        else:
+            start = backfill_start
+        end = today
+
+        try:
+            new_df = _fetch_with_retry(spec["module"], indicator_id, start, end)
+            warnings = validators.validate(spec["type"], new_df, spec.get("columns"))
+        except Exception as e:  # noqa: BLE001
+            fallback = spec.get("fallback_module")
+            if fallback is None:
+                return _result(indicator_id, "failed", existing, str(e))
+            try:
+                new_df = _fetch_with_retry(fallback, indicator_id, start, end)
+                warnings = validators.validate(spec["type"], new_df, spec.get("columns"))
+                used_fallback = True
+            except Exception as e2:  # noqa: BLE001
+                return _result(indicator_id, "failed", existing, f"1차 실패({e}) / 폴백 실패({e2})")
+
+        if existing and existing.get("series"):
+            old_df = _series_to_df(spec, existing)
+            merged = pd.concat([old_df[old_df["date"] < new_df["date"].min()], new_df], ignore_index=True)
+        else:
+            merged = new_df
+
     merged = merged.drop_duplicates(subset="date").sort_values("date").reset_index(drop=True)
 
     record = {
@@ -227,7 +255,9 @@ def build_summary(data_dir: str) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--profile", choices=["preopen", "afterclose", "all"], default="all")
+    parser.add_argument(
+        "--profile", choices=["preopen", "afterclose", "market_hours", "all"], default="all"
+    )
     parser.add_argument("--backfill-years", type=int, default=5)
     parser.add_argument(
         "--backfill-days", type=int, default=None, help="테스트용 — 지정 시 backfill-years 대신 사용"
@@ -244,7 +274,9 @@ def main() -> int:
     results = []
     for indicator_id in ids:
         print(f"- {indicator_id} ...", end=" ", flush=True)
-        r = collect_one(indicator_id, data_dir, args.backfill_years, args.backfill_days)
+        r = collect_one(
+            indicator_id, data_dir, args.backfill_years, args.backfill_days, profile=args.profile
+        )
         print(r["status"], r["note"] or "")
         results.append(r)
 

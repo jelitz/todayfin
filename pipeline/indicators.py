@@ -5,7 +5,7 @@
     실제 데이터 생산 주체를 사람이 읽는 이름으로 표기한다(사용자 피드백 2026-08-03 반영).
 """
 
-from sources import ecos, fdr_source, fred, naver, treasury, yfinance_source
+from sources import ecos, fdr_source, fred, naver, naver_realtime, treasury, yfinance_source
 
 KRX_NAME = "한국거래소(KRX)"
 KRX_VIA_NAVER_NAME = "한국거래소(KRX) · 네이버페이 증권"
@@ -46,6 +46,7 @@ INDICATORS = {
         source_name=KRX_NAME,
         module=fdr_source,
         profile="afterclose",
+        realtime_module=naver_realtime,
     ),
     "kosdaq": dict(
         name="코스닥",
@@ -56,6 +57,7 @@ INDICATORS = {
         source_name=KRX_NAME,
         module=fdr_source,
         profile="afterclose",
+        realtime_module=naver_realtime,
     ),
     "samsung": dict(
         name="삼성전자",
@@ -66,6 +68,7 @@ INDICATORS = {
         source_name=KRX_NAME,
         module=fdr_source,
         profile="afterclose",
+        realtime_module=naver_realtime,
     ),
     "skhynix": dict(
         name="SK하이닉스",
@@ -76,6 +79,7 @@ INDICATORS = {
         source_name=KRX_NAME,
         module=fdr_source,
         profile="afterclose",
+        realtime_module=naver_realtime,
     ),
     "usdkrw": dict(
         name="원/달러",
@@ -163,3 +167,17 @@ PROFILES = {
     "afterclose": [k for k, v in INDICATORS.items() if v["profile"] == "afterclose"],
 }
 PROFILES["all"] = list(INDICATORS.keys())
+
+# 정규장 중(09:00~15:30 KST) 30분 간격 준실시간 수집 대상 — 국채 4종은 하루 1회 고시값이라 제외.
+# 지표의 "주 프로필"(preopen/afterclose, 백필·확정치 담당)과는 별개로 부가 참여하는 집합.
+PROFILES["market_hours"] = [
+    "investor_kospi",
+    "investor_kosdaq",
+    "kospi",
+    "kosdaq",
+    "samsung",
+    "skhynix",
+    "usdkrw",
+    "usdjpy",
+    "wti",
+]

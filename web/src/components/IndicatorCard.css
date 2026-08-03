@@ -95,3 +95,38 @@
   color: var(--ink-muted);
   background: var(--surface-2);
 }
+
+.indicator-card-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-size: var(--fs-caption-sm);
+  font-weight: 600;
+  color: var(--accent);
+  vertical-align: middle;
+}
+
+.indicator-card-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: indicator-live-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator-card-live-dot {
+    animation: none;
+  }
+}
+
+@keyframes indicator-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}

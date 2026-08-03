@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Summary } from './types'
 import { SECTIONS } from './types'
 import Home from './components/Home'
@@ -38,6 +38,9 @@ export default function App() {
   )
 }
 
+/** 홈 카드 자동 갱신 주기 — docs/specs/near-realtime-updates/requirements.md R4 */
+const SUMMARY_POLL_INTERVAL_MS = 5 * 60 * 1000
+
 function AppShell() {
   const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash))
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -51,23 +54,60 @@ function AppShell() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  const hasLoadedRef = useRef(false)
+
   useEffect(() => {
     let cancelled = false
 
-    fetch(`${import.meta.env.BASE_URL}data/summary.json`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json() as Promise<Summary>
-      })
-      .then((data) => {
-        if (!cancelled) setSummary(data)
-      })
-      .catch(() => {
-        if (!cancelled) setSummaryError('데이터를 불러오지 못했습니다.')
-      })
+    const fetchSummary = () => {
+      fetch(`${import.meta.env.BASE_URL}data/summary.json`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          return res.json() as Promise<Summary>
+        })
+        .then((data) => {
+          if (!cancelled) {
+            hasLoadedRef.current = true
+            setSummary(data)
+            setSummaryError(null)
+          }
+        })
+        .catch(() => {
+          // 폴링 재조회 실패 시 기존 값을 유지하고, 한 번도 로드에 성공한 적 없을 때만 에러 화면 표시
+          // (일시적 네트워크 문제로 이미 보여주던 데이터가 에러 화면으로 바뀌는 것을 방지 —
+          // 데이터 정확성 원칙: 실패 시 기존 값 유지)
+          if (!cancelled && !hasLoadedRef.current) setSummaryError('데이터를 불러오지 못했습니다.')
+        })
+    }
+
+    fetchSummary()
+
+    let intervalId: ReturnType<typeof setInterval> | null = null
+    const startPolling = () => {
+      if (intervalId === null) intervalId = setInterval(fetchSummary, SUMMARY_POLL_INTERVAL_MS)
+    }
+    const stopPolling = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
+    }
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling()
+      } else {
+        fetchSummary() // 탭 복귀 시 즉시 최신화
+        startPolling()
+      }
+    }
+
+    startPolling()
+    document.addEventListener('visibilitychange', onVisibilityChange)
 
     return () => {
       cancelled = true
+      stopPolling()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [])
 

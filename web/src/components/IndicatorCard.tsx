@@ -2,6 +2,7 @@ import type { JSX } from 'react'
 import type { SummaryIndicator } from '../types'
 import { formatValue, formatPct, formatChangeAbs, formatDate } from '../lib/format'
 import { daysSince } from '../lib/stale'
+import { isIntraday } from '../lib/realtime'
 import './IndicatorCard.css'
 
 export interface IndicatorCardProps {
@@ -46,6 +47,7 @@ export default function IndicatorCard({ indicator, onClick }: IndicatorCardProps
   const changeText = type === 'flows' ? formatChangeAbs(change_abs, unit) : formatPct(change_pct)
   const changeClass = change == null || change === 0 ? 'muted' : change > 0 ? 'up' : 'down'
   const arrow = change == null || change === 0 ? '' : change > 0 ? '▲' : '▼'
+  const intraday = isIntraday(id, observed_last)
 
   const handleActivate = () => onClick(id)
 
@@ -65,7 +67,15 @@ export default function IndicatorCard({ indicator, onClick }: IndicatorCardProps
       <span className="indicator-card-expand" aria-hidden="true">
         ↗
       </span>
-      <div className="indicator-card-name">{name}</div>
+      <div className="indicator-card-name">
+        {name}
+        {intraday && (
+          <span className="indicator-card-live" aria-label="장중 갱신 중">
+            <span className="indicator-card-live-dot" aria-hidden="true" />
+            장중
+          </span>
+        )}
+      </div>
       <div className="indicator-card-value">{latest === null ? '—' : formatValue(latest, unit)}</div>
       <div className={`indicator-card-change ${changeClass}`}>
         {arrow ? `${arrow} ` : ''}
