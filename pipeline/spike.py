@@ -146,6 +146,35 @@ def treasury_fetch():
     }
 
 
+# ── 5b) KRX Open API (키 있을 때만) ──────────────────────────────────────────
+def krx_fetch(name: str, path: str, filter_code: str | None = None):
+    def _fn():
+        key = os.environ.get("KRX_API_KEY")
+        if not key:
+            return {"note": "skipped (no KRX_API_KEY)"}
+        results = {}
+        for back in (1, 2, 3, 5):
+            bas_dd = last_weekday_kst(back).strftime("%Y%m%d")
+            url = f"http://data-dbg.krx.co.kr/svc/apis/{path}"
+            r = requests.get(url, params={"basDd": bas_dd}, headers={"AUTH_KEY": key}, timeout=20)
+            body_preview = r.text[:300]
+            try:
+                body = r.json()
+            except ValueError:
+                results[f"back{back}({bas_dd})"] = f"status={r.status_code} non-json body={body_preview!r}"
+                continue
+            if "OutBlock_1" not in body:
+                results[f"back{back}({bas_dd})"] = f"status={r.status_code} body={json.dumps(body, ensure_ascii=False)[:300]}"
+                continue
+            rows = body["OutBlock_1"]
+            if filter_code:
+                rows = [row for row in rows if row.get("ISU_CD") == filter_code or row.get("ISU_SRT_CD") == filter_code]
+            results[f"back{back}({bas_dd})"] = f"rows={len(rows)} sample={rows[:1]}"
+        return {"note": f"{name} basDd별 결과", "sample": results}
+
+    return _fn
+
+
 # ── 5) ECOS (키 있을 때만) ──────────────────────────────────────────────────
 def ecos_fetch():
     key = os.environ.get("ECOS_API_KEY")
@@ -188,6 +217,10 @@ def main():
     run("yfinance_CL=F", yfinance_fetch("CL=F"))
     run("treasury_10y", treasury_fetch)
     run("ecos_ktb3y", ecos_fetch)
+    run("krx_kospi_index", krx_fetch("krx_kospi_index", "idx/kospi_dd_trd"))
+    run("krx_kosdaq_index", krx_fetch("krx_kosdaq_index", "idx/kosdaq_dd_trd"))
+    run("krx_samsung", krx_fetch("krx_samsung", "sto/stk_bydd_trd", filter_code="005930"))
+    run("krx_skhynix", krx_fetch("krx_skhynix", "sto/stk_bydd_trd", filter_code="000660"))
 
     ok = sum(1 for v in RESULTS.values() if v["ok"])
     print(f"\n=== summary: {ok}/{len(RESULTS)} ok ===")

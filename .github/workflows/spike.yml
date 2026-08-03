@@ -24,6 +24,7 @@ jobs:
         env:
           CI: "true"
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+          KRX_API_KEY: ${{ secrets.KRX_API_KEY }}
         run: python pipeline/spike.py
 
       - name: Upload result
