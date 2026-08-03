@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Summary } from './types'
 import Home from './components/Home'
 import About from './components/About'
+import Alsangmoo from './components/Alsangmoo'
 import Detail from './components/Detail'
 import Modal from './components/Modal'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -114,11 +115,19 @@ function AppShell() {
       )}
 
       <main className="app-main">
-        {route.name === 'about' ? (
+        {route.name === 'about' && (
           <ErrorBoundary key="about">
             <About />
           </ErrorBoundary>
-        ) : (
+        )}
+
+        {route.name === 'alsangmoo' && (
+          <ErrorBoundary key="alsangmoo">
+            <Alsangmoo />
+          </ErrorBoundary>
+        )}
+
+        {(route.name === 'home' || route.name === 'detail') && (
           <>
             <ErrorBoundary key="home">
               <Home

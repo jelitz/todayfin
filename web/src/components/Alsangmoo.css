@@ -1,0 +1,122 @@
+.alsangmoo {
+  max-width: var(--max-width-dashboard);
+  margin: 0 auto;
+  padding: calc(var(--space-unit) * 6) var(--pad-card-mobile) calc(var(--space-unit) * 8);
+}
+
+@media (min-width: 850px) {
+  .alsangmoo {
+    padding-left: var(--pad-card);
+    padding-right: var(--pad-card);
+  }
+}
+
+.alsangmoo-header {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space-unit) * 2);
+  margin-bottom: calc(var(--space-unit) * 4);
+}
+
+.alsangmoo-title {
+  font-size: var(--fs-heading-lg);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.alsangmoo-channel-link {
+  font-size: var(--fs-body-sm);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.alsangmoo-channel-link:hover {
+  text-decoration: underline;
+}
+
+.alsangmoo-status {
+  padding: calc(var(--space-unit) * 4) 0;
+  font-size: var(--fs-body-sm);
+}
+
+.alsangmoo-error-text {
+  color: var(--ink);
+  margin: 0 0 var(--space-unit);
+}
+
+.alsangmoo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(var(--space-unit) * 2);
+}
+
+@media (min-width: 850px) {
+  .alsangmoo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .alsangmoo-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.alsangmoo-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  text-decoration: none;
+  transition: border-color 0.12s ease;
+}
+
+.alsangmoo-card:hover,
+.alsangmoo-card:focus-visible {
+  border-color: var(--accent);
+}
+
+.alsangmoo-thumb-wrap {
+  aspect-ratio: 16 / 9;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.alsangmoo-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.alsangmoo-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--hairline-soft);
+}
+
+.alsangmoo-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) / 2);
+  padding: calc(var(--space-unit) * 2);
+}
+
+.alsangmoo-card-title {
+  font-size: var(--fs-body-sm);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.alsangmoo-card-date {
+  font-size: var(--fs-caption-sm);
+}
+
+.alsangmoo-updated {
+  margin: calc(var(--space-unit) * 3) 0 0;
+  font-size: var(--fs-caption-sm);
+}

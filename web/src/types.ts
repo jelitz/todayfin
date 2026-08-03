@@ -93,3 +93,20 @@ export const SECTIONS: HomeSection[] = [
   },
   { title: "원자재", anchor: "section-commodity", ids: ["wti"] },
 ];
+
+/** data/youtube.json 의 영상 1건 — pipeline/collect_media.py 스키마와 1:1 대응 */
+export interface YoutubeVideo {
+  video_id: string;
+  title: string;
+  /** ISO 8601 (예: "2026-08-02T23:49:20+00:00") */
+  published_at: string;
+  thumbnail_url: string | null;
+  watch_url: string;
+}
+
+export interface YoutubeFeed {
+  channel_name: string;
+  channel_url: string;
+  generated_at: string;
+  videos: YoutubeVideo[];
+}
