@@ -71,7 +71,7 @@ def test_fetch_index_maps_fields_and_filters_by_name(mock_get):
 
     assert len(df) == 1
     row = df.iloc[0]
-    assert row["date"] == "20260803"
+    assert row["date"] == "2026-08-03"
     assert row["close"] == 2655.30
     assert row["volume"] == 450000000.0
 

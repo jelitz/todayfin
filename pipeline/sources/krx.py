@@ -1,12 +1,10 @@
 """KRX Open API — 코스피/코스닥 지수, 삼성전자·SK하이닉스.
 
 한국거래소 공식 무료 API. 인증키(AUTH_KEY 헤더) 발급과 별개로 API마다 개별
-이용신청 후 관리자 승인이 필요한 구조 — 2026-08-03 스파이크(GitHub Actions, 키
-등록 직후)에서 지수·종목 API 4종 전부 401 Unauthorized 확인. 승인 대기 중이라
-아래 필드명·지수명 매칭(IDX_NM)은 공식 문서·커뮤니티 예제 기반 미검증 값이며,
-승인 후 실응답으로 재확인 필요 — docs/specs/dashboard-mvp/implemented.md 참조.
-실패 시 fdr_source로 자동 폴백되므로(indicators.py) 미승인 상태에서도 데이터
-끊김 없이 안전하게 배포 가능.
+이용신청 후 관리자 승인이 필요한 구조 — 2026-08-03 승인 완료 후 GitHub
+Actions 실응답(run 30780627544)으로 필드명·지수명 매칭(IDX_NM="코스피"/
+"코스닥") 검증 완료. 만약 소스 구조가 바뀌어 필드가 어긋나면 KeyError로
+실패하고 fdr_source로 자동 폴백된다(indicators.py).
 
 수급(투자자별 매매동향)은 KRX Open API 서비스 목록에 없어 전환 대상 아님 —
 naver 소스 유지.
@@ -66,13 +64,13 @@ def _business_days(start: date, end: date) -> list[date]:
     return days
 
 
-def _index_row(bas_dd: str, path: str, idx_name: str) -> dict | None:
-    matched = [row for row in _get_rows(path, bas_dd) if row.get("IDX_NM") == idx_name]
+def _index_row(d: date, path: str, idx_name: str) -> dict | None:
+    matched = [row for row in _get_rows(path, d.strftime("%Y%m%d")) if row.get("IDX_NM") == idx_name]
     if not matched:
         return None
     row = matched[0]
     return {
-        "date": bas_dd,
+        "date": d.isoformat(),
         "open": _num(row["OPNPRC_IDX"]),
         "high": _num(row["HGPRC_IDX"]),
         "low": _num(row["LWPRC_IDX"]),
@@ -81,17 +79,17 @@ def _index_row(bas_dd: str, path: str, idx_name: str) -> dict | None:
     }
 
 
-def _stock_row(bas_dd: str, code: str) -> dict | None:
+def _stock_row(d: date, code: str) -> dict | None:
     matched = [
         row
-        for row in _get_rows(_STOCK_PATH, bas_dd)
+        for row in _get_rows(_STOCK_PATH, d.strftime("%Y%m%d"))
         if row.get("ISU_SRT_CD") == code or row.get("ISU_CD") == code
     ]
     if not matched:
         return None
     row = matched[0]
     return {
-        "date": bas_dd,
+        "date": d.isoformat(),
         "open": _num(row["TDD_OPNPRC"]),
         "high": _num(row["TDD_HGPRC"]),
         "low": _num(row["TDD_LWPRC"]),
@@ -111,17 +109,11 @@ def fetch(indicator_id: str, start: date, end: date) -> pd.DataFrame:
     if indicator_id in _INDEX_ENDPOINT:
         path, idx_name = _INDEX_ENDPOINT[indicator_id]
         rows = [
-            row
-            for row in (_index_row(d.strftime("%Y%m%d"), path, idx_name) for d in _business_days(start, end))
-            if row is not None
+            row for row in (_index_row(d, path, idx_name) for d in _business_days(start, end)) if row is not None
         ]
     elif indicator_id in _STOCK_CODE:
         code = _STOCK_CODE[indicator_id]
-        rows = [
-            row
-            for row in (_stock_row(d.strftime("%Y%m%d"), code) for d in _business_days(start, end))
-            if row is not None
-        ]
+        rows = [row for row in (_stock_row(d, code) for d in _business_days(start, end)) if row is not None]
     else:
         raise ValueError(f"krx fetch: 지원하지 않는 indicator_id {indicator_id!r}")
 
