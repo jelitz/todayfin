@@ -5,7 +5,7 @@
     실제 데이터 생산 주체를 사람이 읽는 이름으로 표기한다(사용자 피드백 2026-08-03 반영).
 """
 
-from sources import ecos, fdr_source, fred, naver, naver_realtime, treasury, yfinance_source
+from sources import ecos, fdr_source, fred, krx, naver, naver_realtime, treasury, yfinance_source
 
 KRX_NAME = "한국거래소(KRX)"
 KRX_VIA_NAVER_NAME = "한국거래소(KRX) · 네이버페이 증권"
@@ -42,44 +42,56 @@ INDICATORS = {
         type="ohlcv",
         unit="pt",
         instrument="KRX 산출 코스피 지수 종가",
-        source_label="fdr:KS11",
+        source_label="krx:idx/kospi_dd_trd",
         source_name=KRX_NAME,
-        module=fdr_source,
+        module=krx,
         profile="afterclose",
         realtime_module=naver_realtime,
+        fallback_module=fdr_source,
+        fallback_source_label="fdr:KS11",
+        fallback_source_name=KRX_NAME,
     ),
     "kosdaq": dict(
         name="코스닥",
         type="ohlcv",
         unit="pt",
         instrument="KRX 산출 코스닥 지수 종가",
-        source_label="fdr:KQ11",
+        source_label="krx:idx/kosdaq_dd_trd",
         source_name=KRX_NAME,
-        module=fdr_source,
+        module=krx,
         profile="afterclose",
         realtime_module=naver_realtime,
+        fallback_module=fdr_source,
+        fallback_source_label="fdr:KQ11",
+        fallback_source_name=KRX_NAME,
     ),
     "samsung": dict(
         name="삼성전자",
         type="ohlcv",
         unit="원",
         instrument="삼성전자(005930) 일봉 OHLCV",
-        source_label="fdr:005930",
+        source_label="krx:sto/stk_bydd_trd:005930",
         source_name=KRX_NAME,
-        module=fdr_source,
+        module=krx,
         profile="afterclose",
         realtime_module=naver_realtime,
+        fallback_module=fdr_source,
+        fallback_source_label="fdr:005930",
+        fallback_source_name=KRX_NAME,
     ),
     "skhynix": dict(
         name="SK하이닉스",
         type="ohlcv",
         unit="원",
         instrument="SK하이닉스(000660) 일봉 OHLCV",
-        source_label="fdr:000660",
+        source_label="krx:sto/stk_bydd_trd:000660",
         source_name=KRX_NAME,
-        module=fdr_source,
+        module=krx,
         profile="afterclose",
         realtime_module=naver_realtime,
+        fallback_module=fdr_source,
+        fallback_source_label="fdr:000660",
+        fallback_source_name=KRX_NAME,
     ),
     "usdkrw": dict(
         name="원/달러",

@@ -120,8 +120,23 @@
 
 토큰 추가: `web/src/styles/tokens.css`·`docs/steering/design.md`에 `--surface-dark`/`--on-dark`/`--on-dark-mute` 반영.
 
+## KRX Open API 전환 (2026-08-03)
+
+사용자가 KRX Open API 인증키를 발급받아 `KRX_API_KEY` GitHub Secret으로 등록. 코스피/코스닥/삼전/하이닉스(FDR 소스)를 공식 API로 전환하기 위해 `pipeline/spike.py`에 실제 GitHub Actions 러너에서 지수(`idx/kospi_dd_trd`, `idx/kosdaq_dd_trd`)·종목(`sto/stk_bydd_trd`) 4개 엔드포인트를 호출하는 스파이크를 추가해 실행(run `30780108505`).
+
+**결과**: 4개 API 전부 `401 {"respMsg": "Unauthorized API Call"}`. 원인은 KRX Open API 특유의 2단계 인증 구조 — 인증키(AUTH_KEY) 발급과 개별 API 서비스 이용은 별개이며, API마다 "활용신청 → 관리자 승인" 절차가 추가로 필요하다(공식 이용방법 안내: 로그인/인증키 신청 → 서비스 목록 검색 → **API 활용 신청** → 승인 후 서비스 개시). 사용자에게 확인한 결과 인증키 발급만 완료된 상태, 개별 API 활용신청은 아직 — 코드·설정 문제가 아니라 승인 절차 대기.
+
+**설계 결정**: 승인을 기다리지 않고 코드를 먼저 완성 — `collect_one()`이 1차 소스 실패 시 `fallback_module`로 자동 전환하는 기존 폴백 구조(`ust2y`/`ust10y`/`ust30y`의 treasury→FRED 패턴과 동일)를 그대로 활용하면, 미승인 상태에서도 매 수집마다 KRX 401 실패 → FDR 폴백으로 안전하게 동작하고, 승인이 완료되는 순간 코드 변경 없이 자동으로 KRX가 우선 사용되기 시작한다. 그래서 `pipeline/sources/krx.py`를 신규 작성하고 `indicators.py`에서 kospi/kosdaq/samsung/skhynix의 `module`을 `krx`로, 기존 `fdr_source`는 `fallback_module`로 재배치했다(데이터 권리 우선순위상 공식 API가 FDR보다 안전 — `docs/data-rights.md` 참조).
+
+**미검증 상태 명시**: KRX Open API가 basDd(단일 기준일자) 쿼리 방식이라 `krx.py`는 요청 범위의 영업일마다 반복 호출한다. 응답 필드명(`IDX_NM`/`CLSPRC_IDX`/`TDD_CLSPRC` 등)과 코스피 지수의 정확한 `IDX_NM` 값("코스피")은 401이라 실응답으로 확인하지 못했고, 공식 문서·커뮤니티 예제(블로그·오픈소스 CLI) 교차 확인만 거친 상태다. 승인 후 반드시 실응답으로 재검증 필요 — 필드명이 틀리면 `KeyError`로 예외가 발생해 자동으로 FDR 폴백되므로 운영 중단 리스크는 없다.
+
+**전환 대상에서 제외**: 수급(`investor_kospi`/`investor_kosdaq`)은 KRX Open API 서비스 목록(`openapi.krx.co.kr` 전체 목록 확인)에 투자자별 매매동향 API가 없어 전환 불가 — 계속 네이버 비공식 소스 사용.
+
+**사용자 액션 필요**: openapi.krx.co.kr 로그인 → API 서비스 이용 → "KOSPI 시리즈 일별시세정보"·"KOSDAQ 시리즈 일별시세정보"(지수 카테고리)·"유가증권 일별매매정보"(주식 카테고리) 3개 API 각각 활용신청. 승인은 한국거래소 관리자 처리이므로 소요 시간 예측 불가.
+
 ## 남은 미결 질문
 
+- [ ] **KRX Open API 승인 대기**: 위 항목 참조. 승인 완료 시 `pipeline/sources/krx.py`의 필드명·지수명 매칭을 실응답으로 재검증할 것
 - [x] **ECOS 국고채 3년**: 2026-08-03 `ECOS_API_KEY` 등록 후 실응답으로 검증 완료. 통계표 817Y002/항목 010200000 값 자체는 정상(3.7~3.9%대). 단, 첫 실행에서 `StatisticSearch` 조회 구간이 `1~1000`행으로 하드코딩돼 있어 5년 백필(~1250영업일) 중 최신 1년치가 잘려 `observed_last`가 2025-08-28에 고정·stale 승격되는 버그 발견 — `pipeline/sources/ecos.py`의 조회 상한을 3000행으로 상향해 수정, 재실행으로 `observed_last=2026-07-31`(최근 영업일) 정상 확인
 - [ ] FDR 종목 데이터의 수정주가 여부 (액면분할 대응 정책) — MVP 진행에 비차단, Stage 2에서 FDR 문서 확인 후 스키마에 명기
 - [ ] yfinance 클라우드 안정성은 1회 검증 — Stage 4 자동화 관찰 기간(수일)에 재확인 필요 (알려진 간헐적 429 이력 있음)
