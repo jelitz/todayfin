@@ -6,7 +6,8 @@
 - ✅ specs 문서 (requirements/design/tasks/implemented)
 - ✅ docs/data-rights.md 초안
 - ✅ GitHub public repo 생성·push (https://github.com/jelitz/todayfin)
-- ⬜ 사용자: ECOS 키(필수)·FRED 키(권장)·KRX Open API 인증키(대기용) 신청
+- ✅ 사용자: ECOS 키(2026-08-03 등록·검증 완료)·FRED 키(등록 완료) 신청
+- ⬜ 사용자: KRX Open API 인증키(대기용) 신청
 
 ## Stage 1 — 클라우드 워킹 스켈레톤 + 소스 스파이크
 - ✅ 소스별 최소 fetch 스크립트 (pipeline/spike.py: naver/fdr/stooq/yfinance/treasury/ecos)
