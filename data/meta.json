@@ -2,6 +2,19 @@
   "runs": [
     {
       "profile": "afterclose",
+      "started_at": "2026-08-03T02:58:34.873955+00:00",
+      "results": {
+        "investor_kospi": "ok",
+        "investor_kosdaq": "ok",
+        "kospi": "ok_fallback",
+        "kosdaq": "ok_fallback",
+        "samsung": "ok_fallback",
+        "skhynix": "ok_fallback",
+        "ktb3y": "ok"
+      }
+    },
+    {
+      "profile": "afterclose",
       "started_at": "2026-08-03T02:37:16.287156+00:00",
       "results": {
         "investor_kospi": "ok",
