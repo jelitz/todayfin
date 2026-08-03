@@ -8,7 +8,7 @@
 | 프론트 | Vite + React + TypeScript | 정적 빌드 |
 | 차트 | TradingView Lightweight Charts | 캔들·MA 오버레이·크로스헤어 |
 | 폰트 | Pretendard Variable (OFL) | 수치는 tabular-nums |
-| 자동화 | GitHub Actions cron | 장전 `10 23 * * 0-5`, 장후 `40 9 * * 1-5` (UTC) + 정규장 중 준실시간 `*/30 0-6 * * 1-5`(UTC, 9개 지표만) |
+| 자동화 | GitHub Actions cron | 장전 `10 23 * * 0-5`, 장후 `40 9 * * 1-5` (UTC) + 정규장 중 준실시간 `*/30 0-6 * * 1-5`(UTC, 9개 지표만) + 미디어 `25 * * * *`(매시간, 유튜브 API) |
 | 호스팅 | GitHub Pages (public repo) | actions/deploy-pages로 잡 내 직접 배포 |
 | 저장 | repo 내 JSON (`data/`) | DB 없음. 도입 기준: 지표 30개+ 또는 일중 데이터 필요 시 재검토 |
 
@@ -29,6 +29,7 @@
 | 미국채 10년 | 재무부 Daily Par Yield CSV | FRED DGS10(보정) | FRED만 필요 |
 | 국고채 3년 | ECOS Open API | 없음(stale) | ECOS 필수 |
 | WTI 최근월 선물 | yfinance (CL=F) | — (실패 시 stale) | 불필요 |
+| 알상무 유튜브 영상 | YouTube Data API v3 | — (실패 시 기존 목록 유지) | YOUTUBE_API_KEY 필수 |
 
 배경: KRX 정보데이터시스템 2026-02 로그인 필수화(pykrx 클라우드 부적합), FDR 0.9.110+ GitHub 캐시 전환. **Stooq는 2026년 도입된 봇 방지 챌린지로 완전 폐기(로컬·Actions 양쪽 확인)** — 원래 폴백이던 yfinance가 Stage 1 클라우드 실측에서 정상 동작해 1순위로 승격. 상세·근거는 `docs/data-rights.md`, Stage 1 결과는 `docs/specs/dashboard-mvp/implemented.md`.
 

@@ -29,11 +29,12 @@ GNB의 기존 4개 탭("수급"/"시장 가격·추세"/"거시·통화"/"원자
 - 감지 대상은 영상 업로드만이다. 유튜브 "커뮤니티 게시글"(텍스트/이미지/투표)은 공식 API가 없어 이번 범위에서 제외한다.
 - 인스타그램(`instagram.com/alex.ods5`) 연동은 이번 범위에서 제외한다 — Meta Business Discovery API는 대상 계정이 Business/Creator 계정이어야 하고 요청 앱도 App Review·Business Verification을 통과해야 해서, 개인 프로젝트 규모에서 사실상 불가능하다고 판단했다. 2단계 백로그로 이관.
 - 카드는 썸네일 + 제목 + 게시일로 구성하고, 클릭 시 유튜브(`watch_url`)로 새 탭 이동한다. 사이트 내 임베드 재생은 하지 않는다.
-- 목록은 RSS가 제공하는 최신 15개를 그대로 표시한다(별도 페이지네이션·누적 저장 없음).
+- 목록은 최신 15개를 그대로 표시한다(별도 페이지네이션·누적 저장 없음).
 
 ## R4. 데이터 파이프라인 (알상무)
 
-- WHEN GitHub Actions가 매시간 실행되면 THEN 시스템은 유튜브 RSS(`https://www.youtube.com/feeds/videos.xml?channel_id=UCiDmfbYvuMEVbRxPmFP4sng`)를 가져와 `data/youtube.json`을 최신 목록으로 원자적 교체해야 한다.
+- WHEN GitHub Actions가 매시간 실행되면 THEN 시스템은 YouTube Data API v3로 채널(`UCiDmfbYvuMEVbRxPmFP4sng`)의 최신 영상 목록을 가져와 `data/youtube.json`을 원자적 교체해야 한다.
+- **소스 변경(2026-08-03)**: 최초 계획은 유튜브 RSS 피드였으나 GitHub Actions 러너 IP에서 일관되게 404가 반환돼 사용할 수 없었다. 공식 API로 전환하고 `YOUTUBE_API_KEY` secret을 추가했다 — 경위는 `implemented.md` 참조.
 - 스키마:
   ```json
   {
@@ -51,20 +52,20 @@ GNB의 기존 4개 탭("수급"/"시장 가격·추세"/"거시·통화"/"원자
     ]
   }
   ```
-- RSS는 브라우저에서 CORS로 직접 fetch할 수 없으므로(응답에 `Access-Control-Allow-Origin` 헤더 없음, 2026-08-03 실측 확인) 반드시 서버 사이드(GitHub Actions)에서 가져와 정적 JSON으로 배포한다.
-- 구현은 기존 주가 데이터 파이프라인(`pipeline/collect.py`)과 완전히 분리한다: `pipeline/sources/youtube_rss.py`(RSS 파싱) + `pipeline/collect_media.py`(신규 스크립트) + `.github/workflows/media-collect.yml`(신규 워크플로우, cron 매시간·정각 회피 오프셋). 주가 데이터 수집(`collect-and-deploy.yml`)과 스케줄·장애를 독립시켜, RSS 파싱 실패가 대시보드 배포에 영향을 주지 않도록 한다.
+- API 키를 프론트에 노출할 수 없고 RSS 역시 CORS 헤더가 없어(2026-08-03 실측 확인), 수집은 반드시 서버 사이드(GitHub Actions)에서 하고 결과를 정적 JSON으로 배포한다.
+- 구현은 기존 주가 데이터 파이프라인(`pipeline/collect.py`)과 완전히 분리한다: `pipeline/sources/youtube_api.py`(API 호출·파싱) + `pipeline/collect_media.py`(신규 스크립트) + `.github/workflows/media-collect.yml`(신규 워크플로우, cron 매시간·정각 회피 오프셋). 주가 데이터 수집(`collect-and-deploy.yml`)과 스케줄·장애를 독립시켜, 미디어 수집 실패가 대시보드 배포에 영향을 주지 않도록 한다.
 - 배포는 기존 패턴과 동일하게 GITHUB_TOKEN 커밋이 재귀 트리거를 일으키지 않는 원칙을 지키며, 같은 잡 안에서 커밋→빌드→Pages 배포까지 완결한다.
 
 ## R5. 에러 처리 / 엣지 케이스
 
-- RSS 요청 실패 시 기존 `data/youtube.json`을 그대로 유지한다(빈 목록으로 덮어쓰지 않음) — 기존 파이프라인의 "실패 시 stale 유지, 조용한 왜곡 방지" 원칙과 동일하게 적용한다.
+- API 요청 실패 시 기존 `data/youtube.json`을 그대로 유지한다(빈 목록으로 덮어쓰지 않음) — 기존 파이프라인의 "실패 시 stale 유지, 조용한 왜곡 방지" 원칙과 동일하게 적용한다.
 - 미디어 데이터에는 주가 데이터의 "3영업일 stale 실패 승격" 개념을 적용하지 않는다 — 영상이 며칠 올라오지 않는 것은 정상적인 상황이라 워크플로우 실패로 취급하지 않는다.
 - `data/youtube.json`이 아예 없거나 fetch 실패 시, 알상무 페이지는 "불러오지 못했습니다" 안내와 채널 링크(유튜브로 바로 이동)만 표시한다.
 - 잘못된 해시(`#/unknown`)는 기존 동작대로 홈으로 처리한다(변경 없음).
 
 ## R6. 테스트 계획
 
-- `pipeline/sources/youtube_rss.py`: RSS XML 파싱 단위 테스트(정상 응답, 빈 채널, 잘못된 XML).
+- `pipeline/sources/youtube_api.py`: playlistItems 응답 파싱 단위 테스트(필드 매핑, 최신순 정렬, 썸네일 해상도 선택, 비공개·삭제 영상 제외, 빈 응답).
 - 프론트: 라우트 파싱(`parseHash`)에 `#/about`/`#/alsangmoo` 케이스 추가, GNB 탭 클릭 시 라우트 전환 확인.
 - Stage 3와 동일하게 dev 서버 + 브라우저(claude-in-chrome)로 실제 화면(GNB 탭 전환, 소개 페이지, 알상무 카드 그리드, 티커바 노출/숨김) 검증.
 
