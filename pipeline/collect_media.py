@@ -1,11 +1,14 @@
 """미디어 수집 — 알상무 유튜브 채널 최신 영상 목록을 data/youtube.json으로 저장.
 
 주가 데이터 파이프라인(collect.py)과 완전히 분리돼 있다. 스케줄·장애를 독립시켜
-RSS 파싱 실패가 대시보드 배포에 영향을 주지 않게 하기 위함 —
+미디어 수집 실패가 대시보드 배포에 영향을 주지 않게 하기 위함 —
 docs/specs/content-pages/design.md 참조.
 
+소스는 YouTube Data API v3(sources/youtube_api.py). RSS 피드는 GitHub Actions 러너 IP에서
+차단돼 CI에서 쓸 수 없었다 — 경위는 youtube_api.py 상단 주석 참조.
+
 사용:
-    python collect_media.py [--data-dir ../data]
+    YOUTUBE_API_KEY=... python collect_media.py [--data-dir ../data]
 """
 
 from __future__ import annotations
@@ -21,13 +24,11 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from sources import youtube_rss  # noqa: E402
+from sources import youtube_api  # noqa: E402
 
 _CHANNEL_ID = "UCiDmfbYvuMEVbRxPmFP4sng"  # 알상무
-# 유튜브 RSS는 짧은 간격 반복 호출 시 404/500을 간헐적으로 돌려주고 수십 초 뒤 복구된다
-# (2026-08-03 실측 — sources/youtube_rss.py 주석 참조). 주가 소스(5·15초)보다 길게 잡는다.
-_RETRIES = 4
-_RETRY_DELAYS = [10, 30, 60, 90]
+_RETRIES = 2
+_RETRY_DELAYS = [5, 15]
 _REQUIRED_VIDEO_FIELDS = ("video_id", "title", "watch_url")
 
 
@@ -41,7 +42,7 @@ def _fetch_with_retry(channel_id: str) -> dict:
     last_err: Exception | None = None
     for attempt in range(_RETRIES + 1):
         try:
-            return youtube_rss.fetch(channel_id)
+            return youtube_api.fetch(channel_id)
         except Exception as e:  # noqa: BLE001
             last_err = e
             if attempt < _RETRIES:

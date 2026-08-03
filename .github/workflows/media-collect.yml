@@ -1,8 +1,10 @@
 name: Collect media (youtube RSS)
 
-# 알상무 유튜브 채널 RSS를 매시간 가져와 data/youtube.json을 갱신하고 Pages까지 배포한다.
+# 알상무 유튜브 채널의 최신 영상을 매시간 가져와 data/youtube.json을 갱신하고 Pages까지 배포한다.
+# 소스는 YouTube Data API v3 — RSS 피드는 러너 IP에서 차단돼 쓸 수 없었다
+# (경위는 pipeline/sources/youtube_api.py 상단 주석 참조).
 # 주가 데이터 파이프라인(collect-and-deploy.yml)과 스케줄·장애를 완전히 분리한다 —
-# RSS 파싱 실패가 대시보드 배포에 영향을 주지 않게 하기 위함
+# 미디어 수집 실패가 대시보드 배포에 영향을 주지 않게 하기 위함
 # (docs/specs/content-pages/design.md 참조).
 #
 # GITHUB_TOKEN 커밋은 후속 워크플로우를 트리거하지 않으므로 배포를 이 잡 안에서 완결한다.
@@ -36,9 +38,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install requests defusedxml
+        run: pip install requests
 
       - name: Collect media
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: python pipeline/collect_media.py
 
       - name: Commit data

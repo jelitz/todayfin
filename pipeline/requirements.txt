@@ -3,4 +3,3 @@ requests
 lxml
 finance-datareader
 yfinance
-defusedxml
