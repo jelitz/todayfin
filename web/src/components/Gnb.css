@@ -25,6 +25,7 @@
   font-size: var(--fs-heading-sm);
   font-weight: 700;
   color: var(--ink);
+  text-decoration: none;
 }
 
 .gnb-tabs {
@@ -37,12 +38,14 @@
 
 .gnb-tab {
   flex-shrink: 0;
+  display: inline-block;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
   padding: calc(var(--space-unit) * 2) 0;
   font-size: var(--fs-body-sm);
   color: var(--ink-muted);
+  text-decoration: none;
   cursor: pointer;
   transition: color 0.12s ease, border-color 0.12s ease;
 }

@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Summary } from './types'
-import { SECTIONS } from './types'
 import Home from './components/Home'
 import Detail from './components/Detail'
 import Modal from './components/Modal'
 import ErrorBoundary from './components/ErrorBoundary'
-import Gnb from './components/Gnb'
+import Gnb, { GNB_TABS } from './components/Gnb'
 import TickerBar from './components/TickerBar'
 import { ThemeProvider, useTheme } from './components/ThemeProvider'
-import { useActiveSection } from './lib/useActiveSection'
 import { parseHash } from './lib/route'
 import { formatDateTimeKST } from './lib/format'
 import './App.css'
@@ -29,7 +27,6 @@ function AppShell() {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const { theme, toggleTheme } = useTheme()
-  const activeAnchor = useActiveSection(SECTIONS.map((s) => s.anchor))
 
   useEffect(() => {
     const onHashChange = () => setRoute(parseHash(window.location.hash))
@@ -99,18 +96,20 @@ function AppShell() {
   return (
     <div className="app-shell">
       <Gnb
-        sections={SECTIONS}
-        activeAnchor={activeAnchor}
+        tabs={GNB_TABS}
+        activeRouteName={route.name === 'detail' ? 'home' : route.name}
         updatedAtLabel={summary ? formatDateTimeKST(summary.generated_at) : null}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
-      <TickerBar
-        summary={summary}
-        onSelect={(id) => {
-          window.location.hash = `#/i/${id}`
-        }}
-      />
+      {(route.name === 'home' || route.name === 'detail') && (
+        <TickerBar
+          summary={summary}
+          onSelect={(id) => {
+            window.location.hash = `#/i/${id}`
+          }}
+        />
+      )}
 
       <main className="app-main">
         <ErrorBoundary key="home">
