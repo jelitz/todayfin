@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Summary } from './types'
 import Home from './components/Home'
+import About from './components/About'
 import Detail from './components/Detail'
 import Modal from './components/Modal'
 import ErrorBoundary from './components/ErrorBoundary'
 import Gnb, { GNB_TABS } from './components/Gnb'
 import TickerBar from './components/TickerBar'
 import { ThemeProvider, useTheme } from './components/ThemeProvider'
+import type { Route } from './lib/route'
 import { parseHash } from './lib/route'
 import { formatDateTimeKST } from './lib/format'
 import './App.css'
@@ -112,22 +114,30 @@ function AppShell() {
       )}
 
       <main className="app-main">
-        <ErrorBoundary key="home">
-          <Home
-            summary={summary}
-            error={summaryError}
-            onSelect={(id) => {
-              window.location.hash = `#/i/${id}`
-            }}
-          />
-        </ErrorBoundary>
-
-        {route.name === 'detail' && (
-          <Modal onClose={() => (window.location.hash = '#/')}>
-            <ErrorBoundary key={route.id}>
-              <Detail id={route.id} onBack={() => (window.location.hash = '#/')} />
+        {route.name === 'about' ? (
+          <ErrorBoundary key="about">
+            <About />
+          </ErrorBoundary>
+        ) : (
+          <>
+            <ErrorBoundary key="home">
+              <Home
+                summary={summary}
+                error={summaryError}
+                onSelect={(id) => {
+                  window.location.hash = `#/i/${id}`
+                }}
+              />
             </ErrorBoundary>
-          </Modal>
+
+            {route.name === 'detail' && (
+              <Modal onClose={() => (window.location.hash = '#/')}>
+                <ErrorBoundary key={route.id}>
+                  <Detail id={route.id} onBack={() => (window.location.hash = '#/')} />
+                </ErrorBoundary>
+              </Modal>
+            )}
+          </>
         )}
       </main>
 
