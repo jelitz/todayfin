@@ -26,6 +26,7 @@
   --surface: #f5f5f5;       /* 신규: 카드/티커바 배경 (기존 --surface-soft #fafafa보다 진한 coinglass 톤) */
   --surface-2: #fafafa;     /* 기존 --surface-soft 대체 — 배지·스켈레톤 등 더 옅은 중첩면 */
   --ink: #000000;
+  --ink-charcoal: #525252;  /* 유지 — 스파크라인·보조 라벨 등 ink/ink-body 사이 중간 톤 */
   --ink-body: #595959;      /* 기존 #737373 → coinglass text-secondary */
   --ink-muted: #8c8c8c;     /* 기존 #a3a3a3 → coinglass text-tertiary */
   --hairline: #dbdbdb;      /* 기존 #e5e5e5 → coinglass border */
@@ -58,6 +59,7 @@
   --surface: #1d1d1d;
   --surface-2: #1a1a1a;
   --ink: #f0f0f0;
+  --ink-charcoal: #c2c2c2;
   --ink-body: #adadad;
   --ink-muted: #7e7e7e;
   --hairline: #3e3e3e;
@@ -114,7 +116,9 @@ export function getChartSurfaceTheme(theme: 'light' | 'dark') {
 
 ## 티커 바 (`web/src/components/TickerBar.tsx` + `TickerBar.css`, 재도입)
 
-2026-08-03 3차 피드백으로 보류됐던 기능. 이전 구현(커밋 `a7789d7`)의 동작 패턴 — 두 벌 복제 콘텐츠 + `translateX(-50%)` 무한 스크롤, hover 시 정지, `prefers-reduced-motion` 대응, 클릭 시 카드와 동일하게 모달 오픈, 좌측에 데이터 기준 시각(KST) 고정 — 을 그대로 유지하되 coinglass 톤(8px, surface 배경, 데이터 잉크는 고정 원칙)으로 새로 스타일링해 구현한다.
+2026-08-03 3차 피드백으로 보류됐던 기능. 이전 구현(커밋 `a7789d7`)의 동작 패턴 — 두 벌 복제 콘텐츠 + `translateX(-50%)` 무한 스크롤, hover 시 정지, 클릭 시 카드와 동일하게 모달 오픈, 좌측에 데이터 기준 시각(KST) 고정 — 을 그대로 유지하되 coinglass 톤(8px, surface 배경, 데이터 잉크는 고정 원칙)으로 새로 스타일링해 구현한다.
+
+**정정(2026-08-03, 배포 후 확인)**: 최초 구현에는 `prefers-reduced-motion: reduce`일 때 애니메이션을 끄는 접근성 대응이 있었으나, 실제 배포 사이트 확인 중 사용자의 브라우저 환경이 그 상태로 감지되어 티커 바가 아예 움직이지 않는 것으로 보이는 문제가 발견됨. 사용자가 "OS 설정과 무관하게 항상 애니메이션"으로 정책을 확정해 `@media (prefers-reduced-motion: reduce)` 분기를 제거함(requirements.md R3 갱신).
 
 - Props: `summary: Summary | null`, `onSelect: (id: string) => void`
 - `summary.indicators` 전체(12종)를 `IndicatorCard`와 동일한 포맷 규칙(`lib/format.ts`)으로 렌더링

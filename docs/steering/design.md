@@ -11,6 +11,7 @@
   --surface: #f5f5f5;
   --surface-2: #fafafa;
   --ink: #000000;
+  --ink-charcoal: #525252;
   --ink-body: #595959;
   --ink-muted: #8c8c8c;
   --hairline: #dbdbdb;
@@ -54,6 +55,7 @@
   --surface: #1d1d1d;
   --surface-2: #1a1a1a;
   --ink: #f0f0f0;
+  --ink-charcoal: #c2c2c2;
   --ink-body: #adadad;
   --ink-muted: #7e7e7e;
   --hairline: #3e3e3e;
@@ -81,7 +83,7 @@
 
 - 대시보드 그리드 max-width **1280px**, 브레이크포인트 1280px+ 3열 / 850px 2열 / 640px 1열 — 변경 없음
 - **GNB**(신규, 상단 고정 아님·문서 흐름 내 위치): 로고 `todayfin` + 카테고리 4탭(수급/시장 가격·추세/거시·통화/원자재, 클릭 시 스크롤 이동·활성 탭 자동 갱신) + 다크모드 토글 + 마지막 갱신 시각. 배경 `--canvas`, 하단 `--hairline`. 기존 "헤더는 `--surface-dark` 역색 표면" 패턴을 대체한다.
-- **티커 바**(신규 재도입): GNB 바로 아래, `--surface` 배경, 전 지표 요약을 우→좌 무한 스크롤. hover 정지·`prefers-reduced-motion` 대응·클릭 시 상세 모달.
+- **티커 바**(신규 재도입): GNB 바로 아래, `--surface` 배경, 전 지표 요약을 우→좌 무한 스크롤(OS 모션 설정과 무관하게 항상 재생). hover 정지·클릭 시 상세 모달.
 - 카드: `--surface` 배경 + 1px `--hairline` + 8px 라운드 + 32px 패딩(모바일 20px)
 
 ## 차트 규칙
