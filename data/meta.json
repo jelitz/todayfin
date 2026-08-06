@@ -2,6 +2,21 @@
   "runs": [
     {
       "profile": "market_hours",
+      "started_at": "2026-08-06T05:00:04.730561+00:00",
+      "results": {
+        "investor_kospi": "ok",
+        "investor_kosdaq": "ok",
+        "kospi": "ok",
+        "kosdaq": "ok",
+        "samsung": "ok",
+        "skhynix": "ok",
+        "usdkrw": "ok",
+        "usdjpy": "ok",
+        "wti": "ok"
+      }
+    },
+    {
+      "profile": "market_hours",
       "started_at": "2026-08-06T01:51:46.347014+00:00",
       "results": {
         "investor_kospi": "ok",
@@ -113,21 +128,6 @@
     {
       "profile": "market_hours",
       "started_at": "2026-08-04T07:36:57.499918+00:00",
-      "results": {
-        "investor_kospi": "ok",
-        "investor_kosdaq": "ok",
-        "kospi": "ok",
-        "kosdaq": "ok",
-        "samsung": "ok",
-        "skhynix": "ok",
-        "usdkrw": "ok",
-        "usdjpy": "ok",
-        "wti": "ok"
-      }
-    },
-    {
-      "profile": "market_hours",
-      "started_at": "2026-08-04T04:57:20.897358+00:00",
       "results": {
         "investor_kospi": "ok",
         "investor_kosdaq": "ok",
