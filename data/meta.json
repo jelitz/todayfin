@@ -1,6 +1,18 @@
 {
   "runs": [
     {
+      "profile": "preopen",
+      "started_at": "2026-08-06T00:09:03.791581+00:00",
+      "results": {
+        "usdkrw": "ok",
+        "usdjpy": "ok",
+        "wti": "ok",
+        "ust2y": "ok",
+        "ust10y": "ok",
+        "ust30y": "ok"
+      }
+    },
+    {
       "profile": "afterclose",
       "started_at": "2026-08-05T11:45:41.345049+00:00",
       "results": {
@@ -126,18 +138,6 @@
         "usdkrw": "ok",
         "usdjpy": "ok",
         "wti": "ok"
-      }
-    },
-    {
-      "profile": "preopen",
-      "started_at": "2026-08-04T00:15:34.674031+00:00",
-      "results": {
-        "usdkrw": "ok",
-        "usdjpy": "ok",
-        "wti": "ok",
-        "ust2y": "ok",
-        "ust10y": "ok",
-        "ust30y": "ok"
       }
     }
   ]
