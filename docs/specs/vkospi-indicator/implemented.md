@@ -13,7 +13,7 @@
 - 사전 실측: `pipeline/spike.py`에 drvprod 프로브 추가, Actions run 31209393183에서 승인 상태·"코스피 200 변동성지수" 행(8/6 종가 77.17 — 블로그의 "8월초 75~77선"과 교차 일치)·필드 목록 확인. 첫 시도(run 31209224322)는 T+1 공표를 몰라 rows=0 — 소급일 순회로 수정 후 성공.
 - 대안 소스 전멸 실측: yfinance(^VKOSPI 폐지)·FinanceDataReader(미지원)·네이버 금융(미제공)·pykrx(개별지수 미제공+로그인 필수화)·CNBC(차단) — 동일 정의 폴백 없음으로 확정, 실패 시 stale 유지.
 - pytest 6건(매칭·공백 변형·빈 종가·부재·스로틀 경계) + 기존 회귀 전체 통과.
-- 5년 백필: Actions workflow_dispatch(profile=afterclose, run 31214068839)로 수행 — 결과는 아래 갱신.
+- 5년 백필: Actions workflow_dispatch(profile=afterclose, run 31214068839)로 수행 — **성공**. 1,221행(2021-08-09~2026-08-06), 0값·범위 이상치 0건, 잡 전체 약 17분(빈 CLSPRC 방어·스로틀 포함). summary의 change_pct -1.76%가 KRX 원문 FLUC_RT와 일치(교차 검증). 배포 사이트에서 홈 행·티커·상세 1Y 차트 확인 — 차트 추이가 참고 블로그의 서술(연초 30 → 6월 피크 94~98 → 8월초 75~77)과 일치.
 
 ## 미결 질문
 
