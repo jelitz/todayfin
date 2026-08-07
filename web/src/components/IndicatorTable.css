@@ -104,11 +104,13 @@ tbody:first-of-type .itable-section-title {
   text-align: right;
   font-weight: 600;
   color: var(--ink);
+  word-break: keep-all; /* "억원"·"원" 등 단위가 단어 중간에서 줄바꿈되지 않게 */
 }
 
 .itable-change {
   text-align: right;
   font-weight: 600;
+  word-break: keep-all;
 }
 
 .itable-spark-cell {
@@ -234,13 +236,13 @@ tbody:first-of-type .itable-section-title {
   }
 
   .itable-col-name {
-    width: 44%;
+    width: 38%;
   }
   .itable-col-value {
-    width: 24%;
+    width: 26%;
   }
   .itable-col-change {
-    width: 20%;
+    width: 24%;
   }
   .itable-col-detail {
     width: 12%;
