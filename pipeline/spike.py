@@ -175,6 +175,32 @@ def krx_fetch(name: str, path: str, filter_code: str | None = None):
     return _fn
 
 
+# ── 5c) KRX 파생상품지수 — VKOSPI(코스피 200 변동성지수) 포함 여부 확인 ─────
+def krx_drvprod():
+    def _fn():
+        key = os.environ.get("KRX_API_KEY")
+        if not key:
+            return {"note": "skipped (no KRX_API_KEY)"}
+        bas_dd = last_weekday_kst(1).strftime("%Y%m%d")
+        url = "http://data-dbg.krx.co.kr/svc/apis/idx/drvprod_dd_trd"
+        r = requests.get(url, params={"basDd": bas_dd}, headers={"AUTH_KEY": key}, timeout=20)
+        try:
+            body = r.json()
+        except ValueError:
+            raise ValueError(f"status={r.status_code} non-json body={r.text[:300]!r}")
+        if "OutBlock_1" not in body:
+            raise ValueError(f"status={r.status_code} body={json.dumps(body, ensure_ascii=False)[:300]}")
+        rows = body["OutBlock_1"]
+        vol = [row for row in rows if "변동성" in row.get("IDX_NM", "")]
+        return {
+            "note": f"basDd={bas_dd} rows={len(rows)} vol_rows={len(vol)}",
+            "idx_names": [row.get("IDX_NM") for row in rows],
+            "sample": vol if vol else rows[:2],
+        }
+
+    return _fn
+
+
 # ── 5) ECOS (키 있을 때만) ──────────────────────────────────────────────────
 def ecos_fetch():
     key = os.environ.get("ECOS_API_KEY")
@@ -221,6 +247,7 @@ def main():
     run("krx_kosdaq_index", krx_fetch("krx_kosdaq_index", "idx/kosdaq_dd_trd"))
     run("krx_samsung", krx_fetch("krx_samsung", "sto/stk_bydd_trd", filter_code="005930"))
     run("krx_skhynix", krx_fetch("krx_skhynix", "sto/stk_bydd_trd", filter_code="000660"))
+    run("krx_drvprod_vkospi", krx_drvprod())
 
     ok = sum(1 for v in RESULTS.values() if v["ok"])
     print(f"\n=== summary: {ok}/{len(RESULTS)} ok ===")
