@@ -8,5 +8,5 @@
 - ✅ T4. `web/src/types.ts`: SECTIONS에 "변동성·리스크" 섹션 추가(시장 가격·추세 뒤)
 - ✅ T5. `web/src/components/About.tsx`: items에 `sourceUrl`/`sourceLabel` 선택 필드 + 렌더, "변동성·리스크" 그룹·VKOSPI 항목 추가, "지표 12개" 하드코딩 카피 수정
 - ✅ T6. 문서: `docs/data-rights.md` KRX 행에 drvprod 추가, `docs/steering/tech.md` 소스 매트릭스 VKOSPI 행
-- ⬜ T7. Actions workflow_dispatch(afterclose)로 5년 백필 실행 → `data/vkospi.json` 생성·이력·status ok 검증 (의존: T1~T3 푸시)
-- ⬜ T8. 브라우저 검증: 홈 노출·상세 차트·티커 포함, 라이트/다크 (의존: T4·T5·T7)
+- ✅ T7. Actions workflow_dispatch(afterclose)로 5년 백필 실행 → `data/vkospi.json` 생성·이력·status ok 검증 (의존: T1~T3 푸시)
+- ✅ T8. 브라우저 검증: 홈 노출·상세 차트·티커 포함, 라이트/다크 (의존: T4·T5·T7)

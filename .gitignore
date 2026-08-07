@@ -31,3 +31,4 @@ web/public/data/
 # 수집 임시 영역 (원자적 교체 전 스테이징)
 pipeline/.staging/
 pipeline/spike-result.json
+.playwright-cli/
