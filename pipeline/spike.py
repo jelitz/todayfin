@@ -181,22 +181,26 @@ def krx_drvprod():
         key = os.environ.get("KRX_API_KEY")
         if not key:
             return {"note": "skipped (no KRX_API_KEY)"}
-        bas_dd = last_weekday_kst(1).strftime("%Y%m%d")
         url = "http://data-dbg.krx.co.kr/svc/apis/idx/drvprod_dd_trd"
-        r = requests.get(url, params={"basDd": bas_dd}, headers={"AUTH_KEY": key}, timeout=20)
-        try:
-            body = r.json()
-        except ValueError:
-            raise ValueError(f"status={r.status_code} non-json body={r.text[:300]!r}")
-        if "OutBlock_1" not in body:
-            raise ValueError(f"status={r.status_code} body={json.dumps(body, ensure_ascii=False)[:300]}")
-        rows = body["OutBlock_1"]
-        vol = [row for row in rows if "변동성" in row.get("IDX_NM", "")]
-        return {
-            "note": f"basDd={bas_dd} rows={len(rows)} vol_rows={len(vol)}",
-            "idx_names": [row.get("IDX_NM") for row in rows],
-            "sample": vol if vol else rows[:2],
-        }
+        for back in (1, 2, 3, 5):
+            bas_dd = last_weekday_kst(back).strftime("%Y%m%d")
+            r = requests.get(url, params={"basDd": bas_dd}, headers={"AUTH_KEY": key}, timeout=20)
+            try:
+                body = r.json()
+            except ValueError:
+                raise ValueError(f"status={r.status_code} non-json body={r.text[:300]!r}")
+            if "OutBlock_1" not in body:
+                raise ValueError(f"status={r.status_code} body={json.dumps(body, ensure_ascii=False)[:300]}")
+            rows = body["OutBlock_1"]
+            if not rows:
+                continue  # T+1 공표 전이면 다음 소급일 시도
+            vol = [row for row in rows if "변동성" in row.get("IDX_NM", "")]
+            return {
+                "note": f"basDd={bas_dd} rows={len(rows)} vol_rows={len(vol)}",
+                "idx_names": [row.get("IDX_NM") for row in rows],
+                "sample": vol if vol else rows[:2],
+            }
+        raise ValueError("모든 소급일에서 rows=0")
 
     return _fn
 
