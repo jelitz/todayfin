@@ -7,7 +7,7 @@ export type Route =
   | { name: "home" }
   | { name: "detail"; id: string }
   | { name: "about" }
-  | { name: "alsangmoo" };
+  | { name: "alsangmoo"; videoId: string | null };
 
 export function parseHash(hash: string): Route {
   const clean = hash.replace(/^#/, "");
@@ -24,8 +24,12 @@ export function parseHash(hash: string): Route {
     return { name: "detail", id };
   }
 
+  // 유튜브 영상 ID 문자집합([A-Za-z0-9_-])만 허용 — 디코드 불필요, 그 외 변형은 홈 폴백
+  const videoMatch = clean.match(/^\/alsangmoo\/v\/([A-Za-z0-9_-]+)$/);
+  if (videoMatch) return { name: "alsangmoo", videoId: videoMatch[1] };
+
   if (clean === "/about") return { name: "about" };
-  if (clean === "/alsangmoo") return { name: "alsangmoo" };
+  if (clean === "/alsangmoo") return { name: "alsangmoo", videoId: null };
 
   return { name: "home" };
 }

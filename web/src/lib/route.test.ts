@@ -14,8 +14,21 @@ describe("parseHash", () => {
     expect(parseHash("#/about")).toEqual({ name: "about" });
   });
 
-  it("#/alsangmoo 는 알상무 페이지", () => {
-    expect(parseHash("#/alsangmoo")).toEqual({ name: "alsangmoo" });
+  it("#/alsangmoo 는 알상무 페이지(영상 미선택)", () => {
+    expect(parseHash("#/alsangmoo")).toEqual({ name: "alsangmoo", videoId: null });
+  });
+
+  it("#/alsangmoo/v/{id} 는 영상 모달", () => {
+    expect(parseHash("#/alsangmoo/v/dQw4w9WgXcQ")).toEqual({
+      name: "alsangmoo",
+      videoId: "dQw4w9WgXcQ",
+    });
+  });
+
+  it("유튜브 ID 문자집합 밖의 영상 경로는 홈으로 폴백", () => {
+    expect(parseHash("#/alsangmoo/v/")).toEqual({ name: "home" });
+    expect(parseHash("#/alsangmoo/v/abc%20def")).toEqual({ name: "home" });
+    expect(parseHash("#/alsangmoo/v/abc/def")).toEqual({ name: "home" });
   });
 
   it("#/i/{id} 는 상세", () => {

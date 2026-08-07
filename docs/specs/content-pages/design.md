@@ -98,6 +98,8 @@ const INDICATOR_NOTES: { section: string; items: { name: string; note: string }[
 
 카드는 `<a href={watch_url} target="_blank" rel="noopener noreferrer">`. 유튜브 이탈이 의도된 동작이므로 앵커가 맞다.
 
+> **2026-08-08 대체됨**: 카드의 새 탭 이탈은 [`alsangmoo-player`](../alsangmoo-player/) 스펙으로 대체 — 이제 카드 클릭 시 사이트 내 모달에서 재생하고, 임베드가 꺼진 영상만 새 탭 이탈을 유지한다.
+
 썸네일은 `loading="lazy"` + `aspect-ratio: 16/9` + `object-fit: cover`. 유튜브 썸네일은 해상도에 따라 4:3 레터박스가 있는 경우가 있어 `cover`로 잘라낸다.
 
 ## 4. 미디어 수집 파이프라인

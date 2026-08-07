@@ -1,44 +1,84 @@
-import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
-import type { YoutubeFeed } from '../types'
+import type { YoutubeFeed, YoutubeVideo } from '../types'
 import { formatDateTimeKST } from '../lib/format'
+import { usePolledJson } from '../lib/usePolledJson'
+import Modal from './Modal'
 import './Alsangmoo.css'
 
 const CHANNEL_FALLBACK_URL = 'https://www.youtube.com/@rsangmoo'
+/** 새 영상 자동 반영 주기 — 수집 cron(매시 25분)과 별개로, 열어둔 탭에서의 재조회 (R6) */
+const FEED_POLL_INTERVAL_MS = 5 * 60 * 1000
 
-export default function Alsangmoo(): JSX.Element {
-  const [feed, setFeed] = useState<YoutubeFeed | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+function VideoCard({ video }: { video: YoutubeVideo }): JSX.Element {
+  // 소유자가 임베드를 꺼둔 영상만 기존처럼 유튜브 새 탭으로 — 깨진 플레이어를 처음부터 안 보여준다(R4)
+  const external = video.embeddable === false
+  const cardProps = external
+    ? { href: video.watch_url, target: '_blank', rel: 'noopener noreferrer' }
+    : { href: `#/alsangmoo/v/${video.video_id}` }
 
-  useEffect(() => {
-    let cancelled = false
+  return (
+    <a className="alsangmoo-card" {...cardProps}>
+      <div className="alsangmoo-thumb-wrap">
+        {video.thumbnail_url ? (
+          <img className="alsangmoo-thumb" src={video.thumbnail_url} alt="" loading="lazy" />
+        ) : (
+          <div className="alsangmoo-thumb-placeholder" aria-hidden="true" />
+        )}
+      </div>
+      <div className="alsangmoo-card-body">
+        <span className="alsangmoo-card-title">
+          {video.title}
+          {external && (
+            <span className="alsangmoo-card-external" aria-label="유튜브에서 열림">
+              {' '}
+              ↗
+            </span>
+          )}
+        </span>
+        <span className="alsangmoo-card-date muted">{formatDateTimeKST(video.published_at)}</span>
+      </div>
+    </a>
+  )
+}
 
-    // 캐시 버스팅 — GitHub Pages CDN·브라우저 캐시로 새 영상이 가려지는 것 방지
-    fetch(`${import.meta.env.BASE_URL}data/youtube.json?_=${Date.now()}`, { cache: 'no-store' })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json() as Promise<YoutubeFeed>
-      })
-      .then((data) => {
-        if (!cancelled) {
-          setFeed(data)
-          setLoading(false)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setError(true)
-          setLoading(false)
-        }
-      })
+function PlayerModal({ videoId, title }: { videoId: string; title: string | null }): JSX.Element {
+  return (
+    <Modal onClose={() => (window.location.hash = '#/alsangmoo')}>
+      <div className="alsangmoo-player">
+        {title && <h2 className="alsangmoo-player-title">{title}</h2>}
+        <div className="alsangmoo-player-frame">
+          <iframe
+            className="alsangmoo-player-iframe"
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1`}
+            title={title ?? '알상무 영상'}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        {/* 저작권·지역 차단 등 사전 감지 불가능한 재생 실패의 최종 안전망 (R3) */}
+        <a
+          className="alsangmoo-player-external"
+          href={`https://www.youtube.com/watch?v=${videoId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          유튜브에서 보기 ↗
+        </a>
+      </div>
+    </Modal>
+  )
+}
 
-    return () => {
-      cancelled = true
-    }
-  }, [])
+export default function Alsangmoo({ videoId }: { videoId: string | null }): JSX.Element {
+  const { data: feed, error } = usePolledJson<YoutubeFeed>(
+    `${import.meta.env.BASE_URL}data/youtube.json`,
+    FEED_POLL_INTERVAL_MS,
+  )
+  const loading = feed === null && !error
 
   const channelUrl = feed?.channel_url ?? CHANNEL_FALLBACK_URL
+  // 피드(최신 15개 롤링)에서 밀려난 딥링크도 재생은 허용 — 제목만 생략 (R5)
+  const currentTitle = feed?.videos.find((v) => v.video_id === videoId)?.title ?? null
 
   return (
     <div className="alsangmoo">
@@ -66,43 +106,18 @@ export default function Alsangmoo(): JSX.Element {
         <>
           <div className="alsangmoo-grid">
             {feed.videos.map((video) => (
-              <a
-                key={video.video_id}
-                className="alsangmoo-card"
-                href={video.watch_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="alsangmoo-thumb-wrap">
-                  {video.thumbnail_url ? (
-                    <img
-                      className="alsangmoo-thumb"
-                      src={video.thumbnail_url}
-                      alt=""
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="alsangmoo-thumb-placeholder" aria-hidden="true" />
-                  )}
-                </div>
-                <div className="alsangmoo-card-body">
-                  <span className="alsangmoo-card-title">{video.title}</span>
-                  <span className="alsangmoo-card-date muted">
-                    {formatDateTimeKST(video.published_at)}
-                  </span>
-                </div>
-              </a>
+              <VideoCard key={video.video_id} video={video} />
             ))}
           </div>
-          <p className="alsangmoo-updated muted">
-            목록 갱신: {formatDateTimeKST(feed.generated_at)}
-          </p>
+          <p className="alsangmoo-updated muted">목록 갱신: {formatDateTimeKST(feed.generated_at)}</p>
         </>
       )}
 
       {feed && feed.videos.length === 0 && (
         <p className="alsangmoo-status muted">표시할 영상이 없습니다.</p>
       )}
+
+      {videoId && <PlayerModal videoId={videoId} title={currentTitle} />}
     </div>
   )
 }

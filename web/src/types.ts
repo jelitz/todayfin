@@ -103,6 +103,8 @@ export interface YoutubeVideo {
   published_at: string;
   thumbnail_url: string | null;
   watch_url: string;
+  /** 소유자가 임베드를 허용했는지(videos.list part=status). 누락 시 true로 취급 — 임베드 시도 */
+  embeddable?: boolean;
 }
 
 export interface YoutubeFeed {

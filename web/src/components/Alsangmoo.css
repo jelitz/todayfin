@@ -120,3 +120,60 @@
   margin: calc(var(--space-unit) * 3) 0 0;
   font-size: var(--fs-caption-sm);
 }
+
+.alsangmoo-card-external {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+/* ── 플레이어 모달 — docs/specs/alsangmoo-player/design.md §2.
+   Modal 패널(1280px)보다 좁게 제한해 노트북 뷰포트에서 플레이어+하단 링크가
+   첫 화면에 들어오게 하고, 32px 패딩으로 ✕ 버튼(absolute 16px) 오버랩을 피한다. ── */
+
+.alsangmoo-player {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: calc(var(--space-unit) * 4);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-unit) * 2);
+}
+
+.alsangmoo-player-title {
+  font-size: var(--fs-heading-sm);
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  padding-right: calc(var(--space-unit) * 4); /* ✕ 버튼 회피 */
+}
+
+.alsangmoo-player-frame {
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.alsangmoo-player-iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.alsangmoo-player-external {
+  align-self: flex-start;
+  font-size: var(--fs-body-sm);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.alsangmoo-player-external:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .alsangmoo-player {
+    padding: var(--pad-card-mobile);
+  }
+}

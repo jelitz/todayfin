@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Summary } from './types'
 import Home from './components/Home'
 import About from './components/About'
@@ -12,6 +12,7 @@ import { ThemeProvider, useTheme } from './components/ThemeProvider'
 import type { Route } from './lib/route'
 import { parseHash } from './lib/route'
 import { formatDateTimeKST } from './lib/format'
+import { usePolledJson } from './lib/usePolledJson'
 import './App.css'
 
 export default function App() {
@@ -27,73 +28,17 @@ const SUMMARY_POLL_INTERVAL_MS = 5 * 60 * 1000
 
 function AppShell() {
   const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash))
-  const [summary, setSummary] = useState<Summary | null>(null)
-  const [summaryError, setSummaryError] = useState<string | null>(null)
+  // 폴링·캐시 버스팅·실패 시 기존 값 유지 정책은 usePolledJson 참조(알상무 피드와 공용)
+  const { data: summary, error: summaryError } = usePolledJson<Summary>(
+    `${import.meta.env.BASE_URL}data/summary.json`,
+    SUMMARY_POLL_INTERVAL_MS,
+  )
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     const onHashChange = () => setRoute(parseHash(window.location.hash))
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
-
-  const hasLoadedRef = useRef(false)
-
-  useEffect(() => {
-    let cancelled = false
-
-    const fetchSummary = () => {
-      // 캐시 버스팅 필수 — GitHub Pages(CDN·브라우저)가 summary.json을 캐시하면 폴링을 걸어도
-      // 실제로는 오래된 응답을 계속 받게 되어 "5분마다 최신화" 요구사항이 무력화된다(배포 직후 실측으로 확인).
-      fetch(`${import.meta.env.BASE_URL}data/summary.json?_=${Date.now()}`, { cache: 'no-store' })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          return res.json() as Promise<Summary>
-        })
-        .then((data) => {
-          if (!cancelled) {
-            hasLoadedRef.current = true
-            setSummary(data)
-            setSummaryError(null)
-          }
-        })
-        .catch(() => {
-          // 폴링 재조회 실패 시 기존 값을 유지하고, 한 번도 로드에 성공한 적 없을 때만 에러 화면 표시
-          // (일시적 네트워크 문제로 이미 보여주던 데이터가 에러 화면으로 바뀌는 것을 방지 —
-          // 데이터 정확성 원칙: 실패 시 기존 값 유지)
-          if (!cancelled && !hasLoadedRef.current) setSummaryError('데이터를 불러오지 못했습니다.')
-        })
-    }
-
-    fetchSummary()
-
-    let intervalId: ReturnType<typeof setInterval> | null = null
-    const startPolling = () => {
-      if (intervalId === null) intervalId = setInterval(fetchSummary, SUMMARY_POLL_INTERVAL_MS)
-    }
-    const stopPolling = () => {
-      if (intervalId !== null) {
-        clearInterval(intervalId)
-        intervalId = null
-      }
-    }
-    const onVisibilityChange = () => {
-      if (document.hidden) {
-        stopPolling()
-      } else {
-        fetchSummary() // 탭 복귀 시 즉시 최신화
-        startPolling()
-      }
-    }
-
-    startPolling()
-    document.addEventListener('visibilitychange', onVisibilityChange)
-
-    return () => {
-      cancelled = true
-      stopPolling()
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-    }
   }, [])
 
   return (
@@ -123,7 +68,7 @@ function AppShell() {
 
         {route.name === 'alsangmoo' && (
           <ErrorBoundary key="alsangmoo">
-            <Alsangmoo />
+            <Alsangmoo videoId={route.videoId} />
           </ErrorBoundary>
         )}
 

@@ -7,7 +7,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from sources.youtube_api import parse_playlist_items  # noqa: E402
+from sources.youtube_api import merge_embeddable, parse_playlist_items  # noqa: E402
 
 
 def _item(video_id: str, title: str, published: str, thumbs: dict | None = None) -> dict:
@@ -114,3 +114,42 @@ def test_parse_uses_video_published_at_over_snippet_published_at():
 def test_parse_empty_items_returns_empty_list():
     assert parse_playlist_items({"items": []}) == []
     assert parse_playlist_items({}) == []
+
+
+# ── merge_embeddable (videos.list part=status) ─────────────────────────────
+
+
+def _video(video_id: str) -> dict:
+    return {"video_id": video_id, "title": "제목", "watch_url": f"https://www.youtube.com/watch?v={video_id}"}
+
+
+def test_merge_embeddable_sets_flag_by_video_id():
+    status_body = {
+        "items": [
+            {"id": "v1", "status": {"embeddable": True}},
+            {"id": "v2", "status": {"embeddable": False}},
+        ]
+    }
+    merged = merge_embeddable([_video("v1"), _video("v2")], status_body)
+    assert merged[0]["embeddable"] is True
+    assert merged[1]["embeddable"] is False
+
+
+def test_merge_embeddable_omits_field_for_missing_ids():
+    """status 응답에 없는 영상은 필드를 넣지 않는다 — 프론트가 누락=true로 취급."""
+    status_body = {"items": [{"id": "v1", "status": {"embeddable": True}}]}
+    merged = merge_embeddable([_video("v1"), _video("v2")], status_body)
+    assert "embeddable" in merged[0]
+    assert "embeddable" not in merged[1]
+
+
+def test_merge_embeddable_ignores_non_boolean_values():
+    status_body = {"items": [{"id": "v1", "status": {"embeddable": "true"}}, {"id": "v2", "status": {}}]}
+    merged = merge_embeddable([_video("v1"), _video("v2")], status_body)
+    assert "embeddable" not in merged[0]
+    assert "embeddable" not in merged[1]
+
+
+def test_merge_embeddable_empty_status_body_keeps_videos_intact():
+    merged = merge_embeddable([_video("v1")], {})
+    assert merged == [_video("v1")]

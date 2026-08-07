@@ -5,8 +5,12 @@ RSS 피드 방식을 대체한다(구현은 커밋 917f886에 보존). RSS는 Gi
 같은 시각 로컬 한국 IP에서는 200. UA·재시도로는 해결 불가한 IP 기반 차단).
 공식 API는 데이터센터 IP에서도 정상 동작한다.
 
-할당량: channels.list 1유닛 + playlistItems.list 1유닛 = 실행당 2유닛.
-매시간 실행해도 하루 48유닛으로, 무료 한도 10,000유닛/일에 여유가 크다.
+할당량: channels.list 1 + playlistItems.list 1 + videos.list(status) 1 = 실행당 3유닛.
+매시간 실행해도 하루 72유닛으로, 무료 한도 10,000유닛/일에 여유가 크다.
+
+videos.list part=status는 embeddable(소유자가 임베드를 허용했는지)을 주며, 인라인
+플레이어(alsangmoo-player)가 깨진 임베드를 미리 피하는 데 쓴다. 이 호출이 실패해도
+목록 수집은 성공 처리한다 — embeddable은 선택 필드고, 프론트는 누락을 true로 취급.
 
 collect_media.py는 이 모듈의 fetch(channel_id)만 호출한다.
 """
@@ -84,6 +88,27 @@ def parse_playlist_items(body: dict) -> list[dict]:
     return videos
 
 
+def merge_embeddable(videos: list[dict], status_body: dict) -> list[dict]:
+    """videos.list part=status 응답의 embeddable을 video_id 기준으로 병합(순수 함수 — 테스트 진입점).
+
+    응답에 없는 id는 필드를 넣지 않는다 — 프론트가 누락을 true(임베드 시도)로 취급하므로
+    부분 실패가 기능 저하로만 끝난다.
+    """
+    embeddable_by_id: dict[str, bool] = {}
+    for item in status_body.get("items", []):
+        video_id = item.get("id")
+        embeddable = (item.get("status") or {}).get("embeddable")
+        if video_id and isinstance(embeddable, bool):
+            embeddable_by_id[video_id] = embeddable
+
+    return [
+        {**video, "embeddable": embeddable_by_id[video["video_id"]]}
+        if video["video_id"] in embeddable_by_id
+        else dict(video)
+        for video in videos
+    ]
+
+
 def fetch(channel_id: str) -> dict:
     """채널의 최신 영상 목록을 가져온다. 반환: {channel_name, channel_url, videos}."""
     channels = _get("channels", {"part": "snippet,contentDetails", "id": channel_id})
@@ -107,9 +132,17 @@ def fetch(channel_id: str) -> dict:
             "maxResults": _MAX_RESULTS,
         },
     )
+    videos = parse_playlist_items(playlist)
+
+    if videos:
+        try:
+            status = _get("videos", {"part": "status", "id": ",".join(v["video_id"] for v in videos)})
+            videos = merge_embeddable(videos, status)
+        except Exception as e:  # noqa: BLE001 — embeddable은 선택 정보라 목록 수집을 실패시키지 않는다
+            print(f"[경고] videos.list(status) 실패 — embeddable 없이 진행: {e}")
 
     return {
         "channel_name": channel_name,
         "channel_url": _CHANNEL_URL.format(channel_id=channel_id),
-        "videos": parse_playlist_items(playlist),
+        "videos": videos,
     }

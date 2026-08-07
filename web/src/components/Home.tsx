@@ -6,7 +6,8 @@ import './Home.css'
 
 export interface HomeProps {
   summary: Summary | null
-  error: string | null
+  /** 한 번도 로드에 성공하지 못한 경우에만 true — 문구는 Home이 자체 렌더하므로 boolean으로 충분 */
+  error: boolean
   onSelect: (id: string) => void
 }
 
