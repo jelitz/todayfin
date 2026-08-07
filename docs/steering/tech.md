@@ -28,6 +28,7 @@
 | USD/KRW, USD/JPY | yfinance (KRW=X, JPY=X) | — (실패 시 stale) | 불필요 |
 | 미국채 10년 | 재무부 Daily Par Yield CSV | FRED DGS10(보정) | FRED만 필요 |
 | 국고채 3년 | ECOS Open API | 없음(stale) | ECOS 필수 |
+| VKOSPI | KRX Open API(drvprod_dd_trd, 2026-08-08 승인 확인) | 없음(stale) — 동일 정의 대안 전무 실측 | KRX 필수 |
 | WTI 최근월 선물 | yfinance (CL=F) | — (실패 시 stale) | 불필요 |
 | 알상무 유튜브 영상 | YouTube Data API v3 | — (실패 시 기존 목록 유지) | YOUTUBE_API_KEY 필수 |
 

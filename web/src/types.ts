@@ -82,6 +82,7 @@ export interface HomeSection {
 export const SECTIONS: HomeSection[] = [
   { title: "수급", anchor: "section-flows", ids: ["investor_kospi", "investor_kosdaq"] },
   { title: "시장 가격·추세", anchor: "section-price-trend", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
+  { title: "변동성·리스크", anchor: "section-risk", ids: ["vkospi"] },
   {
     title: "거시·통화",
     anchor: "section-macro",

@@ -93,6 +93,19 @@ INDICATORS = {
         fallback_source_label="fdr:000660",
         fallback_source_name=KRX_NAME,
     ),
+    "vkospi": dict(
+        name="VKOSPI",
+        type="line",
+        unit="pt",
+        instrument="KRX 코스피200 변동성지수(V-KOSPI200) 종가",
+        source_label="krx:idx/drvprod_dd_trd:vkospi",
+        source_name=KRX_NAME,
+        module=krx,
+        profile="afterclose",
+        # 폴백 없음 — 동일 정의 대안 소스가 없음을 실측 확인(2026-08-08,
+        # docs/specs/vkospi-indicator/requirements.md). 실패 시 stale 유지.
+        # market_hours 제외 — T+1 공표라 장중 갱신 불가.
+    ),
     "usdkrw": dict(
         name="원/달러",
         type="line",

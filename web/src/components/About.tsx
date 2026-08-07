@@ -6,7 +6,10 @@ import './About.css'
  * 소개 문구의 분류·순서는 대시보드 레이아웃과 독립적으로 바뀔 수 있다(design.md 참조).
  * 지표 이름은 docs/specs/dashboard-mvp/requirements.md R1 표와 일치시킬 것.
  */
-const INDICATOR_NOTES: { section: string; items: { name: string; note: string }[] }[] = [
+const INDICATOR_NOTES: {
+  section: string
+  items: { name: string; note: string; sourceUrl?: string; sourceLabel?: string }[]
+}[] = [
   {
     section: '수급',
     items: [
@@ -26,6 +29,17 @@ const INDICATOR_NOTES: { section: string; items: { name: string; note: string }[
       {
         name: '삼성전자 / SK하이닉스',
         note: '코스피 시가총액 상위 두 종목이자 국내 반도체 업황의 대리 지표입니다. 지수가 이 둘에 크게 좌우되기 때문에 따로 봅니다.',
+      },
+    ],
+  },
+  {
+    section: '변동성·리스크',
+    items: [
+      {
+        name: 'VKOSPI',
+        note: '코스피200 옵션 가격에서 산출한 향후 30일 기대변동성으로, 흔히 "공포지수"라 불립니다. 글로벌 기관은 VaR(Value at Risk) 한도라는 위험예산 안에서 움직이기 때문에, 변동성이 커지면 담을 수 있는 코스피 금액이 기계적으로 줄어 매도가 나옵니다. 외국인 수급을 읽는 보조 렌즈로 봅니다.',
+        sourceUrl: 'https://blog.naver.com/ranto28/224371367594',
+        sourceLabel: '참고: 메르, "외국인들이 국장을 던지는 비밀 1"',
       },
     ],
   },
@@ -70,7 +84,7 @@ export default function About(): JSX.Element {
           매일 루틴하게 확인하는 훈련을 통해 시장을 읽는 감각을 기르는 것이 목표입니다.
         </p>
         <p className="about-text">
-          그래서 지표를 12개로 제한했습니다. 더 많은 숫자를 나열하는 대신, 매일 같은 지표를 같은
+          그래서 지표 수를 엄선해 제한했습니다. 더 많은 숫자를 나열하는 대신, 매일 같은 지표를 같은
           자리에서 보며 변화를 체감하는 편이 판단 기준을 만드는 데 유리하다고 봤습니다.
         </p>
       </section>
@@ -84,7 +98,22 @@ export default function About(): JSX.Element {
               {group.items.map((item) => (
                 <div key={item.name} className="about-item">
                   <dt className="about-item-name">{item.name}</dt>
-                  <dd className="about-item-note">{item.note}</dd>
+                  <dd className="about-item-note">
+                    {item.note}
+                    {item.sourceUrl && (
+                      <>
+                        {' '}
+                        <a
+                          className="about-item-source"
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {item.sourceLabel ?? '출처'} ↗
+                        </a>
+                      </>
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>

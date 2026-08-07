@@ -82,3 +82,14 @@
   color: var(--ink-body);
   margin: 0;
 }
+
+.about-item-source {
+  font-size: var(--fs-caption-sm);
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.about-item-source:hover {
+  color: var(--accent);
+}
