@@ -1,9 +1,34 @@
-/* 홈 컴팩트 테이블 — docs/specs/home-table-view/design.md.
+/* 홈 컴팩트 테이블 — docs/specs/home-table-view/design.md 기반,
+   2026-08-08 home-two-column: 반폭 블록 2단 그리드로 재편(docs/specs/home-two-column/design.md).
    색·간격은 전부 기존 토큰, 그림자·그라디언트 금지 원칙 유지. */
 
-.itable-wrap {
-  /* 열 구성이 모바일에서 자체 축소되므로 실사용에서 스크롤이 없어야 하고, 이 overflow는 최후 방어선 */
+.itable-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: calc(var(--space-unit) * 5);
+  row-gap: calc(var(--space-unit) * 4);
+}
+
+/* 2단 최소 폭 1000px: 반폭 = (1000 − 페이지 패딩 64 − gap 40) / 2 = 448px —
+   최장 조합(수급 이름+배지, 금 선물 값) 수용 실측 기준. 산정은 design.md 참조 */
+@media (min-width: 1000px) {
+  .itable-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.itable-block {
+  /* 열 구성이 자체 축소되므로 실사용에서 스크롤이 없어야 하고, 이 overflow는 최후 방어선 */
   overflow-x: auto;
+}
+
+.itable-block-title {
+  /* 전역 리셋이 heading margin을 지우지 않으므로 명시 — 블록 간 간격은 grid gap 단일 책임 */
+  margin: 0 0 var(--space-unit);
+  font-size: var(--fs-body-md);
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0 calc(var(--space-unit) * 1.5);
 }
 
 .itable {
@@ -13,23 +38,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* 등락 20%: 최장 "▼ -10.1조원"(≈84px)이 표준 반폭 588px(콘텐츠 93px)에서 한 줄 유지 —
+   1000~1140px 뷰포트의 반폭에서는 화살표/숫자 줄바꿈으로 우아하게 밀림(실측 2026-08-08) */
 .itable-col-name {
-  width: 26%;
+  width: 30%;
 }
 .itable-col-value {
-  width: 16%;
+  width: 21%;
 }
 .itable-col-change {
-  width: 14%;
+  width: 20%;
 }
 .itable-col-spark {
-  width: 18%;
-}
-.itable-col-date {
-  width: 14%;
+  width: 19%;
 }
 .itable-col-detail {
-  width: 12%;
+  width: 10%;
 }
 
 /* ── 열 헤더 ── */
@@ -51,19 +75,7 @@
   text-align: center;
 }
 
-/* ── 섹션·소그룹 헤더 행 ── */
-
-.itable-section-title {
-  font-size: var(--fs-body-md);
-  font-weight: 600;
-  color: var(--ink);
-  text-align: left;
-  padding: calc(var(--space-unit) * 4) calc(var(--space-unit) * 1.5) var(--space-unit);
-}
-
-tbody:first-of-type .itable-section-title {
-  padding-top: calc(var(--space-unit) * 2);
-}
+/* ── 소그룹 헤더 행 ── */
 
 .itable-subgroup-title {
   font-size: var(--fs-caption-sm);
@@ -95,9 +107,9 @@ tbody:first-of-type .itable-section-title {
 .itable-name {
   color: var(--ink);
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* 반폭 블록에서 nowrap+ellipsis는 stale·장중 배지를 통째로 자르므로 줄바꿈 허용
+     (구 모바일 규칙의 전 폭 확대 — home-two-column 검증 반영) */
+  word-break: keep-all;
 }
 
 .itable-value {
@@ -132,7 +144,10 @@ tbody:first-of-type .itable-section-title {
 }
 
 .itable-spark {
-  width: 100px;
+  /* 고정 100px는 반폭 추세 셀(콘텐츠 ~66px)에 안 들어감 — SVG가
+     preserveAspectRatio="none"이라 유동 폭으로 그대로 스케일된다 */
+  width: 100%;
+  max-width: 100px;
   height: 24px;
   display: inline-block;
   vertical-align: middle;
@@ -142,11 +157,6 @@ tbody:first-of-type .itable-section-title {
   stroke: var(--ink-charcoal);
 }
 
-.itable-date {
-  text-align: right;
-  font-size: var(--fs-caption-sm);
-}
-
 .itable-detail-cell {
   text-align: right;
 }
@@ -154,7 +164,6 @@ tbody:first-of-type .itable-section-title {
 .itable-detail-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-control);
   padding: 4px 10px;
@@ -183,6 +192,7 @@ tbody:first-of-type .itable-section-title {
   font-size: var(--fs-caption-sm);
   color: var(--ink-muted);
   background: var(--surface-2);
+  white-space: nowrap;
 }
 
 .itable-live {
@@ -234,43 +244,32 @@ tbody:first-of-type .itable-section-title {
   border-radius: var(--radius-control);
 }
 
-/* ── 모바일: 추세·기준일 열 숨김, 상세는 아이콘만 (R4) ── */
+/* ── 모바일: 추세 열 숨김 (R4) ── */
 
 @media (max-width: 640px) {
   .itable-th-spark,
-  .itable-spark-cell,
-  .itable-th-date,
-  .itable-date {
+  .itable-spark-cell {
     display: none;
   }
 
-  .itable-col-spark,
-  .itable-col-date {
+  .itable-col-spark {
     width: 0;
   }
 
   .itable-col-name {
-    width: 38%;
+    width: 42%;
   }
   .itable-col-value {
     width: 26%;
   }
   .itable-col-change {
-    width: 24%;
+    width: 20%;
   }
   .itable-col-detail {
     width: 12%;
   }
 
-  .itable-detail-text {
-    display: none;
-  }
-
   .itable-row td {
     padding: 10px var(--space-unit);
-  }
-
-  .itable-name {
-    white-space: normal;
   }
 }

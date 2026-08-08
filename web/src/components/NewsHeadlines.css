@@ -1,0 +1,71 @@
+/* 주요 뉴스 헤드라인 — docs/specs/news-headlines/design.md.
+   카드 문법(1px 헤어라인 + 8px 라운드), 그림자 금지. 전부 테마 토큰 — 다크모드 자동. */
+
+.news {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: calc(var(--space-unit) * 2);
+  margin: 0 0 calc(var(--space-unit) * 5);
+}
+
+.news-title {
+  margin: 0 0 var(--space-unit);
+  font-size: var(--fs-caption-sm);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.news-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 1줄 고정: ellipsis는 inline 요소에 안 걸리므로 flex row + min-width:0 (검증 반영) */
+.news-item {
+  display: flex;
+  gap: var(--space-unit);
+  align-items: baseline;
+  padding: calc(var(--space-unit) / 2) 0;
+  font-size: var(--fs-body-sm);
+}
+
+.news-time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  font-size: var(--fs-caption-sm);
+}
+
+.news-source {
+  flex-shrink: 0;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-muted);
+  font-size: var(--fs-caption-sm);
+}
+
+.news-link {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-body);
+  text-decoration: none;
+}
+
+.news-link:hover,
+.news-link:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* 모바일: 출처명 숨김 — 제목 폭 확보 */
+@media (max-width: 640px) {
+  .news-source {
+    display: none;
+  }
+}

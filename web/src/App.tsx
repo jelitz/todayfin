@@ -104,7 +104,7 @@ function AppShell() {
             판단과 그 결과에 대한 책임은 이용자 본인에게 있습니다.
           </p>
           <p className="app-sources muted">
-            데이터 출처: 한국거래소(KRX), 네이버페이 증권, Yahoo Finance, 미국 재무부, 한국은행(ECOS)
+            데이터 출처: 한국거래소(KRX), 네이버페이 증권, Yahoo Finance, 미국 재무부, 한국은행(ECOS), Google News
           </p>
           <p className="app-credit muted">
             제작: jelitz ·{' '}

@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 import './About.css'
 
 /**
- * 지표별 설명. types.ts의 SECTIONS를 재사용하지 않고 별도 상수로 둔다 —
+ * 지표별 설명. types.ts의 HOME_BLOCKS를 재사용하지 않고 별도 상수로 둔다 —
  * 소개 문구의 분류·순서는 대시보드 레이아웃과 독립적으로 바뀔 수 있다(design.md 참조).
  * 지표 이름은 docs/specs/dashboard-mvp/requirements.md R1 표와 일치시킬 것.
  */
@@ -143,7 +143,9 @@ export default function About(): JSX.Element {
           모든 수치는 한국거래소(KRX), 한국은행(ECOS), 미국 재무부, Yahoo Finance 등 공개된 출처에서
           자동으로 수집합니다. 코스피·환율·니케이·금처럼 한국 정규장 시간에 거래되는 지표는 장중 30분
           간격으로 갱신되고, 미국 지수는 현지 폐장 후 확정치를 아침에, 국채 금리처럼 하루 한 번
-          고시되는 값은 발표 후 반영됩니다. 화면에 표시된 기준일이 실제 데이터의 관측일입니다.
+          고시되는 값은 발표 후 반영됩니다. 각 지표 상세 화면에 표시된 기준일이 실제 데이터의
+          관측일입니다. 홈 상단의 주요 뉴스는 Google News가 국내 언론사 경제 기사에서 추린
+          헤드라인을 매시간 가져와 표시하며, 제목을 클릭하면 해당 언론사 원문으로 이동합니다.
         </p>
       </section>
     </div>

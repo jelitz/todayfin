@@ -1,19 +1,18 @@
-import { Fragment } from 'react'
 import type { JSX } from 'react'
-import type { HomeSection, Summary, SummaryIndicator } from '../types'
-import { formatValue, formatPct, formatChangeAbs, formatDate } from '../lib/format'
+import type { HomeBlock, Summary, SummaryIndicator } from '../types'
+import { formatValue, formatPct, formatChangeAbs } from '../lib/format'
 import { daysSince } from '../lib/stale'
 import { isIntraday } from '../lib/realtime'
 import Sparkline from './Sparkline'
 import './IndicatorTable.css'
 
 export interface IndicatorTableProps {
-  sections: HomeSection[]
+  blocks: HomeBlock[]
   summary: Summary | null
   onSelect: (id: string) => void
 }
 
-const COLUMN_COUNT = 6
+const COLUMN_COUNT = 5
 
 function IndicatorRow({
   indicator,
@@ -51,13 +50,16 @@ function IndicatorRow({
       <td className="itable-spark-cell">
         <Sparkline values={spark} className="itable-spark" />
       </td>
-      <td className="itable-date muted">{formatDate(observed_last ?? '')}</td>
       <td className="itable-detail-cell">
         {/* 행 클릭과 별개의 진짜 앵커 — 키보드 Tab→Enter 진입과 링크 의미론 확보(R2·R7).
             해시 대입은 앵커 기본 동작이 수행하므로 행 onClick 중복 실행만 막는다 */}
-        <a className="itable-detail-link" href={`#/i/${id}`} onClick={(e) => e.stopPropagation()}>
+        <a
+          className="itable-detail-link"
+          href={`#/i/${id}`}
+          aria-label={`${name} 상세`}
+          onClick={(e) => e.stopPropagation()}
+        >
           <span aria-hidden="true">↗</span>
-          <span className="itable-detail-text">상세</span>
         </a>
       </td>
     </tr>
@@ -74,7 +76,7 @@ function SkeletonRow(): JSX.Element {
   )
 }
 
-export default function IndicatorTable({ sections, summary, onSelect }: IndicatorTableProps): JSX.Element {
+export default function IndicatorTable({ blocks, summary, onSelect }: IndicatorTableProps): JSX.Element {
   const renderRows = (ids: string[]): JSX.Element[] =>
     summary === null
       ? ids.map((id) => <SkeletonRow key={id} />)
@@ -84,56 +86,50 @@ export default function IndicatorTable({ sections, summary, onSelect }: Indicato
           .map((ind) => <IndicatorRow key={ind.id} indicator={ind} onSelect={onSelect} />)
 
   return (
-    <div className="itable-wrap">
-      <table className="itable">
-        <colgroup>
-          <col className="itable-col-name" />
-          <col className="itable-col-value" />
-          <col className="itable-col-change" />
-          <col className="itable-col-spark" />
-          <col className="itable-col-date" />
-          <col className="itable-col-detail" />
-        </colgroup>
-        <thead>
-          <tr className="itable-head-row">
-            <th scope="col">지표</th>
-            <th scope="col" className="itable-th-num">
-              현재값
-            </th>
-            <th scope="col" className="itable-th-num">
-              등락
-            </th>
-            <th scope="col" className="itable-th-spark">
-              추세
-            </th>
-            <th scope="col" className="itable-th-num itable-th-date">
-              기준일
-            </th>
-            <th scope="col" aria-label="상세" />
-          </tr>
-        </thead>
-        {sections.map((section) => (
-          <tbody key={section.title}>
-            <tr className="itable-section-row">
-              <th colSpan={COLUMN_COUNT} id={section.anchor} className="itable-section-title">
-                {section.title}
-              </th>
-            </tr>
-            {section.subsections
-              ? section.subsections.map((sub) => (
-                  <Fragment key={sub.title}>
-                    <tr className="itable-subgroup-row">
-                      <th colSpan={COLUMN_COUNT} className="itable-subgroup-title">
-                        {sub.title}
-                      </th>
-                    </tr>
-                    {renderRows(sub.ids)}
-                  </Fragment>
-                ))
-              : renderRows(section.ids ?? [])}
-          </tbody>
-        ))}
-      </table>
+    <div className="itable-grid">
+      {blocks.map((block) => (
+        <section key={block.anchor} className="itable-block" aria-labelledby={block.anchor}>
+          <h2 id={block.anchor} className="itable-block-title">
+            {block.title}
+          </h2>
+          <table className="itable">
+            <colgroup>
+              <col className="itable-col-name" />
+              <col className="itable-col-value" />
+              <col className="itable-col-change" />
+              <col className="itable-col-spark" />
+              <col className="itable-col-detail" />
+            </colgroup>
+            <thead>
+              <tr className="itable-head-row">
+                <th scope="col">지표</th>
+                <th scope="col" className="itable-th-num">
+                  현재값
+                </th>
+                <th scope="col" className="itable-th-num">
+                  등락
+                </th>
+                <th scope="col" className="itable-th-spark">
+                  추세
+                </th>
+                <th scope="col" aria-label="상세" />
+              </tr>
+            </thead>
+            {block.groups.map((group, gi) => (
+              <tbody key={group.title ?? gi}>
+                {group.title && (
+                  <tr className="itable-subgroup-row">
+                    <th colSpan={COLUMN_COUNT} className="itable-subgroup-title">
+                      {group.title}
+                    </th>
+                  </tr>
+                )}
+                {renderRows(group.ids)}
+              </tbody>
+            ))}
+          </table>
+        </section>
+      ))}
     </div>
   )
 }

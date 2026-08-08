@@ -64,45 +64,67 @@ export interface Meta {
   runs: MetaRun[];
 }
 
-export interface HomeSubsection {
-  title: string;
+export interface HomeBlockGroup {
+  /** 블록 안에서 소그룹 제목이 필요할 때만 (예: 미국 국채 / 한국 국채) */
+  title?: string;
   ids: string[];
 }
 
-export interface HomeSection {
+/** 홈 2단 그리드의 반폭 블록 1개 — 순서가 곧 배치(좌→우, 2개씩 한 행) */
+export interface HomeBlock {
+  /** 블록 제목. 같은 섹션이 좌우로 갈리면 "섹션 — 소그룹" 합성 (예: "시장 가격·추세 — 국내") */
   title: string;
   anchor: string;
-  /** 단일 그리드로 나열할 지표 — subsections와 배타적 */
-  ids?: string[];
-  /** 국가·성격별로 소제목을 나눠 모아 보여줄 때 사용 (예: 거시·통화의 환율/미국 국채/한국 국채) */
-  subsections?: HomeSubsection[];
+  groups: HomeBlockGroup[];
 }
 
-/** 지표 ID → 홈 화면 섹션 분류 (알상무 4분류). requirements.md R1 순서를 따른다.
- * 2026-08-08 global-indicators: 시장 가격·추세를 국내/해외 소그룹으로, 환율 소그룹에
- * 유로/달러·달러인덱스 추가(제목 개칭), 원자재에 금 선물 추가. */
-export const SECTIONS: HomeSection[] = [
-  { title: "수급", anchor: "section-flows", ids: ["investor_kospi", "investor_kosdaq"] },
+/** 지표 ID → 홈 화면 블록 분류 (알상무 4분류 기반).
+ * 2026-08-08 home-two-column: 세로 스크롤 완화를 위해 섹션 트리(SECTIONS)를 반폭 블록
+ * 2단 그리드로 재편 — 배치는 docs/specs/home-two-column/requirements.md R1.
+ * 새 지표는 해당 블록 ids에, 새 카테고리는 블록 객체 추가만으로 반영된다. */
+export const HOME_BLOCKS: HomeBlock[] = [
+  { title: "수급", anchor: "section-flows", groups: [{ ids: ["investor_kospi", "investor_kosdaq"] }] },
+  { title: "변동성·리스크", anchor: "section-risk", groups: [{ ids: ["vkospi"] }] },
   {
-    title: "시장 가격·추세",
+    title: "시장 가격·추세 — 국내",
     anchor: "section-price-trend",
-    subsections: [
-      { title: "국내", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
-      { title: "해외", ids: ["nasdaq", "sp500", "dow", "nikkei"] },
-    ],
+    groups: [{ ids: ["kospi", "kosdaq", "samsung", "skhynix"] }],
   },
-  { title: "변동성·리스크", anchor: "section-risk", ids: ["vkospi"] },
   {
-    title: "거시·통화",
+    title: "시장 가격·추세 — 해외",
+    anchor: "section-price-trend-global",
+    groups: [{ ids: ["nasdaq", "sp500", "dow", "nikkei"] }],
+  },
+  {
+    title: "거시·통화 — 환율·달러인덱스",
     anchor: "section-macro",
-    subsections: [
-      { title: "환율·달러인덱스", ids: ["usdkrw", "usdjpy", "eurusd", "dxy"] },
+    groups: [{ ids: ["usdkrw", "usdjpy", "eurusd", "dxy"] }],
+  },
+  {
+    title: "거시·통화 — 국채",
+    anchor: "section-macro-bonds",
+    groups: [
       { title: "미국 국채", ids: ["ust2y", "ust10y", "ust30y"] },
       { title: "한국 국채", ids: ["ktb3y"] },
     ],
   },
-  { title: "원자재", anchor: "section-commodity", ids: ["wti", "gold"] },
+  { title: "원자재", anchor: "section-commodity", groups: [{ ids: ["wti", "gold"] }] },
 ];
+
+/** data/news.json 의 헤드라인 1건 — pipeline/collect_news.py 스키마와 1:1 대응 */
+export interface NewsItem {
+  title: string;
+  url: string;
+  /** RSS <source> 태그의 언론사명. 없으면 null */
+  source: string | null;
+  /** ISO 8601 (UTC) */
+  published_at: string;
+}
+
+export interface NewsFeed {
+  generated_at: string;
+  items: NewsItem[];
+}
 
 /** data/youtube.json 의 영상 1건 — pipeline/collect_media.py 스키마와 1:1 대응 */
 export interface YoutubeVideo {

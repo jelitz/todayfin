@@ -80,9 +80,30 @@ export function formatChangeAbs(value: number | null, unit: string): string {
   return `${sign}${formatValue(value, unit)}`;
 }
 
-/** "YYYY-MM-DD" -> "YYYY.MM.DD" */
-export function formatDate(iso: string): string {
-  return iso.replace(/-/g, '.');
+/**
+ * 뉴스 발행 시각 — KST 기준 오늘이면 "HH:MM", 아니면 "MM.DD HH:MM".
+ * formatToParts로 조립해 로케일 출력 문자열 포맷을 가정하지 않고, 뷰어 로컬 타임존과
+ * 무관하게 KST로 고정한다. now는 테스트 주입용.
+ */
+export function formatNewsTime(iso: string, now: Date = new Date()): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const kstParts = (d: Date) => {
+    const parts = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(d);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+    return { ymd: `${get('year')}-${get('month')}-${get('day')}`, hm: `${get('hour')}:${get('minute')}`, md: `${get('month')}.${get('day')}` };
+  };
+  const target = kstParts(date);
+  const today = kstParts(now);
+  return target.ymd === today.ymd ? target.hm : `${target.md} ${target.hm}`;
 }
 
 /** ISO 문자열(UTC)을 "YYYY.MM.DD HH:MM" (KST)로 포맷한다. */

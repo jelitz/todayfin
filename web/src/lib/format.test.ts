@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatChangeAbs, formatDate, formatHeaderValue, formatPct, formatValue } from './format';
+import { formatChangeAbs, formatHeaderValue, formatNewsTime, formatPct, formatValue } from './format';
 
 describe('formatValue', () => {
   it('formats 억원 under 10000 with comma and sign', () => {
@@ -110,12 +110,25 @@ describe('formatChangeAbs', () => {
   });
 });
 
-describe('formatDate', () => {
-  it('converts hyphen-separated ISO date to dot-separated', () => {
-    expect(formatDate('2026-08-01')).toBe('2026.08.01');
+describe('formatNewsTime', () => {
+  // now = 2026-08-08 12:00 KST (03:00 UTC)
+  const now = new Date('2026-08-08T03:00:00Z');
+
+  it('KST 기준 오늘이면 HH:MM만', () => {
+    expect(formatNewsTime('2026-08-08T02:14:00+00:00', now)).toBe('11:14');
   });
 
-  it('handles single-digit month/day already zero-padded', () => {
-    expect(formatDate('2026-01-05')).toBe('2026.01.05');
+  it('오늘이 아니면 MM.DD HH:MM', () => {
+    expect(formatNewsTime('2026-08-07T10:00:00+00:00', now)).toBe('08.07 19:00');
+    expect(formatNewsTime('2026-08-06T02:00:00+00:00', now)).toBe('08.06 11:00');
+  });
+
+  it('자정 경계: UTC로는 어제라도 KST로 오늘이면 HH:MM', () => {
+    // 2026-08-07 23:30 UTC = 2026-08-08 08:30 KST → 오늘
+    expect(formatNewsTime('2026-08-07T23:30:00+00:00', now)).toBe('08:30');
+  });
+
+  it('파싱 불가 입력은 빈 문자열', () => {
+    expect(formatNewsTime('not-a-date', now)).toBe('');
   });
 });
