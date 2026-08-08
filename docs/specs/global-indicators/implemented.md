@@ -14,7 +14,7 @@
 - pytest: test_yfinance.py 8건 신규(컬럼 매핑·반올림·NaN drop·volume 0.0 float·dedup·line 회귀·빈 응답·전결측) + 회귀 전체 57 통과.
 - vitest: SECTIONS 단언 4건(types.test.ts 신규 — 소그룹 구성·21개 id 전수)·format 5건 추가 + 회귀 전체 88 통과, `tsc -b && vite build` 성공.
 - **로컬 end-to-end 스모크**: collect_one을 스크래치 디렉터리로 실행 — 7종 전부 `ok`, 5년 백필(1,223~1,300행), summary 등락(나스닥 +1.3% 등) 정상. 이 데이터로 dev 서버 브라우저 검증(홈 21행·소그룹·유로/달러 1.1562·금 선물 4,401.30 USD/oz·티커·라이트/다크).
-- 프로덕션 백필·배포 확인: 아래 tasks T6·T7 수행 기록 참조.
+- 프로덕션 백필·배포: workflow_dispatch(profile=all) run 31237461237 — 21종 전부 `ok`(신규 7종 포함), 데이터 커밋 828b269, Pages 배포 완료. 배포 사이트 실측: 홈 21행·소그룹·등락 색상·전 지표 2026-08-07자 최신(수동 all 실행으로 국내 지표 stale도 함께 해소), 나스닥 상세 캔들+MA 3종+헤더 등락, summary의 eurusd 1.1562(4자리).
 
 ## 미결 질문
 

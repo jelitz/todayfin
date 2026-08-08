@@ -7,6 +7,6 @@
 - ✅ T3. 프론트 상수·포맷: types.ts SECTIONS 재편, format.ts USD/USD/oz(+헤더용 포맷), realtime.ts 4종 추가 + SECTIONS 단언 테스트 신규·format 테스트 추가
 - ✅ T4. Detail unit→precision 매핑·헤더 포맷 교체, About 7종 항목·데이터 문단, index.html 메타, TickerBar 주석
 - ✅ T5. pytest(57)·vitest(88) 전체 + `tsc -b && vite build` + 로컬 end-to-end 스모크(7종 실수집 ok)
-- ⬜ T6. 커밋·푸시 → workflow_dispatch(profile=all) 백필 → run 로그·data/*.json 확인 (run 중 main 푸시 금지)
-- ⬜ T7. 배포 사이트 실측: 테이블 21행·티커·상세(캔들/라인·4자리)·라이트/다크
+- ✅ T6. 커밋(a94e30b)·푸시 → workflow_dispatch(profile=all) 백필 run 31237461237 성공 — 21종 전부 `ok`, 데이터 커밋 828b269
+- ✅ T7. 배포 사이트 실측: 테이블 21행(전 지표 8/7자 최신·stale 0)·티커·나스닥 상세 캔들+MA·summary의 eurusd 1.1562 확인
 - ✅ T8. 문서 갱신: tech.md·steering design.md·data-rights.md·implemented.md
