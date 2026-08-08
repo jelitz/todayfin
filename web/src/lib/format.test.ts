@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatChangeAbs, formatHeaderValue, formatNewsTime, formatPct, formatValue } from './format';
+import { formatChangeAbs, formatHeaderValue, formatNewsRelativeTime, formatNewsTime, formatPct, formatValue } from './format';
 
 describe('formatValue', () => {
   it('formats 억원 under 10000 with comma and sign', () => {
@@ -130,5 +130,38 @@ describe('formatNewsTime', () => {
 
   it('파싱 불가 입력은 빈 문자열', () => {
     expect(formatNewsTime('not-a-date', now)).toBe('');
+  });
+});
+
+describe('formatNewsRelativeTime', () => {
+  const now = new Date('2026-08-08T12:00:00+00:00');
+  const at = (iso: string) => formatNewsRelativeTime(iso, now);
+
+  it('60초 미만·미래 시각은 "방금 전"', () => {
+    expect(at('2026-08-08T11:59:30+00:00')).toBe('방금 전');
+    expect(at('2026-08-08T12:05:00+00:00')).toBe('방금 전'); // 시계 오차 가드
+  });
+
+  it('분 단위 — 59분까지', () => {
+    expect(at('2026-08-08T11:59:00+00:00')).toBe('1분 전');
+    expect(at('2026-08-08T11:01:00+00:00')).toBe('59분 전');
+  });
+
+  it('시간 단위 — 60분부터 23시간까지', () => {
+    expect(at('2026-08-08T11:00:00+00:00')).toBe('1시간 전');
+    expect(at('2026-08-07T12:00:01+00:00')).toBe('23시간 전');
+  });
+
+  it('일 단위 — 24시간부터 6일까지', () => {
+    expect(at('2026-08-07T12:00:00+00:00')).toBe('1일 전');
+    expect(at('2026-08-01T12:00:01+00:00')).toBe('6일 전');
+  });
+
+  it('7일 이상은 formatNewsTime(KST 절대 시각)으로 위임', () => {
+    expect(at('2026-08-01T12:00:00+00:00')).toBe('08.01 21:00'); // KST = UTC+9
+  });
+
+  it('파싱 불능은 빈 문자열', () => {
+    expect(at('not-a-date')).toBe('');
   });
 });
