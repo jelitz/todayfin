@@ -3,6 +3,7 @@ import type { NewsFeed, Summary } from '../types'
 import { HOME_BLOCKS } from '../types'
 import IndicatorTable from './IndicatorTable'
 import NewsHeadlines from './NewsHeadlines'
+import { isFreshNews } from '../lib/news'
 import { usePolledJson } from '../lib/usePolledJson'
 import './Home.css'
 
@@ -15,15 +16,6 @@ export interface HomeProps {
 
 /** 뉴스 폴링 주기 — 수집이 매시간이라 summary와 같은 5분이면 충분 */
 const NEWS_POLL_INTERVAL_MS = 5 * 60 * 1000
-/** generated_at이 이보다 오래되면 뉴스 블록을 숨긴다 — 수집 장기 실패 시 며칠 지난
- * 기사가 "주요 뉴스"로 계속 노출되는 것 방지(docs/specs/news-headlines R5) */
-const NEWS_MAX_AGE_MS = 24 * 60 * 60 * 1000
-
-function isFreshNews(feed: NewsFeed | null): feed is NewsFeed {
-  if (!feed || !feed.items || feed.items.length === 0) return false
-  const generated = new Date(feed.generated_at).getTime()
-  return !Number.isNaN(generated) && Date.now() - generated <= NEWS_MAX_AGE_MS
-}
 
 export default function Home({ summary, error, onSelect }: HomeProps): JSX.Element {
   // 실패·부재 시 조용히 숨김(R4) — error는 사용하지 않는다
@@ -52,7 +44,7 @@ export default function Home({ summary, error, onSelect }: HomeProps): JSX.Eleme
         살펴보며 자신만의 판단 기준을 세울 수 있도록 돕습니다. 종목을 추천하는 곳이 아니라, 데이터를
         매일 루틴하게 확인하는 훈련을 통해 시장을 읽는 감각을 기르는 것이 목표입니다.
       </p>
-      {isFreshNews(news) && <NewsHeadlines items={news.items.slice(0, 5)} />}
+      {isFreshNews(news) && <NewsHeadlines items={news.items.slice(0, 5)} moreHref="#/news" />}
       <IndicatorTable blocks={HOME_BLOCKS} summary={summary} onSelect={onSelect} />
     </div>
   )

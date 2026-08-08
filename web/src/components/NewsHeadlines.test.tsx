@@ -37,4 +37,20 @@ describe('NewsHeadlines', () => {
     const html = renderToStaticMarkup(<NewsHeadlines items={[item(1, { source: null })]} />)
     expect(html).not.toContain('news-source')
   })
+
+  it('moreHref 전달 시 제목 행에 더보기 링크를 그린다', () => {
+    const html = renderToStaticMarkup(<NewsHeadlines items={[item(1)]} moreHref="#/news" />)
+    expect(html).toContain('news-more')
+    expect(html).toContain('href="#/news"')
+  })
+
+  it('moreHref 미전달 시 더보기 링크가 없다', () => {
+    const html = renderToStaticMarkup(<NewsHeadlines items={[item(1)]} />)
+    expect(html).not.toContain('news-more')
+  })
+
+  it('className을 section 클래스에 병합한다', () => {
+    const html = renderToStaticMarkup(<NewsHeadlines items={[item(1)]} className="news-pinned" />)
+    expect(html).toContain('class="news news-pinned"')
+  })
 })
