@@ -45,7 +45,18 @@
   news 9·format 6·route 2·NewsHeadlines 3·NewsView 6·News 1), oxlint 에러 0(기존 경고
   2건 유지), vite build 성공, pytest 72/72(uv --python 3.12 — 로컬 PATH python 3.9의
   3.10+ 문법 collection 실패 회피, repo 확립 관례).
-- 로컬 실측·배포 실측: T10·T11에서 기록 예정.
+- 2026-08-08 로컬 실측(T10): 실수집 70건(`--data-dir web/public/data`), dev 브라우저에서
+  고정 5건(+`--surface` 구분감)·주요뉴스 탭 6번째부터·최신뉴스 시간순 재정렬(3h→13h)·
+  다크/라이트 정상·홈 "더보기 →" 이동·피드 클릭 시 구글 경유 원문 도달(MIT 테크놀로지
+  리뷰 실측) 확인. 모바일(≤640px)은 브라우저 창 리사이즈가 환경 제약으로 미적용되어
+  CSS 미디어쿼리 검토로 갈음 — 배포 후 실기기 확인 권장.
+- 2026-08-08 배포 실측(T11): push → media-collect dispatch(run 31262179956 성공) →
+  media-collect 내장 Pages 배포. `http://todayfin.jelitz.com/data/news.json` 70건
+  (generated 14:32Z), 배포 번들 해시가 로컬 검증 빌드와 동일(index-CCFvLth4.js) —
+  뉴스 페이지 코드 포함 확인. github.io → 커스텀 도메인 301.
+  **주의**: 배포 브라우저 픽셀 실측은 두 가지 환경 제약으로 미완 — (1) 커스텀 도메인
+  HTTPS 인증서 발급 대기(HTTP는 200), (2) Claude-in-Chrome 확장에 새 도메인 사이트
+  권한 없음. 렌더링 자체는 동일 코드·데이터로 로컬 실측 완료.
 
 ## 미결 질문
 

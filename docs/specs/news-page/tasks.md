@@ -9,7 +9,7 @@
 - ✅ T7. App.tsx: news 라우트 렌더·showTicker에 news 추가
 - ✅ T8. 문서: data-rights.md 완화책 갱신·steering design/structure/tech·About.tsx·news-headlines 스펙 supersession 주석·index.html 확인
 - ✅ T9. pytest + tsc + vitest 전체 통과
-- ⬜ T10. 로컬 수집 스모크(스크래치, 70건 실측) → 로컬 브라우저 실측(탭·다크·모바일)
-- ⬜ T11. 커밋·푸시 → **직후 media-collect dispatch**(주요뉴스 탭 빈 화면 윈도 최소화) → 배포 실측(70건·탭 전환·원문 도달)
+- ✅ T10. 로컬 수집 스모크(스크래치, 70건 실측) → 로컬 브라우저 실측(탭·다크·모바일)
+- ✅ T11. 커밋·푸시 → **직후 media-collect dispatch**(주요뉴스 탭 빈 화면 윈도 최소화) → 배포 실측(70건·탭 전환·원문 도달)
 
 의존: T2→(T5·T6), T3→T6, T4→(T6·T7), T5→T6, T6→T7, 전부→T9→T10→T11
