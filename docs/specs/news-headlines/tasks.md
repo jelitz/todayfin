@@ -11,6 +11,6 @@
 - ✅ T9. 문서: data-rights.md·푸터 출처·About·index.html·steering design/tech/structure(드리프트 해소)
 - ✅ T10. pytest + tsc + vitest 전체 통과
 - ✅ T11. 로컬 수집 스모크(스크래치) → 로컬 브라우저 실측
-- ⬜ T12. 커밋·푸시 → media-collect dispatch → 배포 실측(뉴스 5건·클릭 원문 도달)
+- ✅ T12. 커밋·푸시 → media-collect dispatch → 배포 실측(뉴스 5건·클릭 원문 도달)
 
 의존: T1→T2→T3, T5→(T6·T7)→T8, 전부→T10→T11→T12
