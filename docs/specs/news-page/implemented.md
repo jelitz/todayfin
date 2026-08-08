@@ -29,11 +29,23 @@
 
 ## 계획과의 편차
 
-- (구현 전)
+- 구현은 ultracode 동적 워크플로우(8-agent, 웨이브 4개: T1·T2·T3·T4·T8 병렬 → T5 → T6 →
+  T7)로 실행 — 에이전트는 편집·스코프 테스트만, 커밋·최종 게이트는 메인 루프.
+- 커밋 단위: 계획의 태스크별 11커밋 대신 파일셋 기준 7커밋(T2+T3 lib 통합, T6의
+  newsPageState는 lib/news.ts 파일 단위로 T2 커밋에 포함) — 병렬 편집 후 순차 커밋 제약.
+- formatNewsRelativeTime 배치는 "파일 끝" 대신 formatNewsTime 바로 뒤(뉴스 시각 포맷 응집).
+- 계획 T2 Step 4의 "테스트 7건" 기대는 오기 — 실제 6건(코드 블록 기준) 전부 통과.
+- index.html: 현행 description이 뉴스 페이지 신설 후에도 정확해 무변경으로 확정(T8 Step 7).
+- vite.config.ts base 변경·web/public/CNAME(todayfin.jelitz.com)은 이 기능과 무관한
+  사용자 병행 작업으로 확인 — news-page 커밋에서 제외.
 
 ## 검증
 
-- (구현 전)
+- 2026-08-08 게이트(메인 루프 직접 실행): tsc -b 무에러, vitest 122/122(신규:
+  news 9·format 6·route 2·NewsHeadlines 3·NewsView 6·News 1), oxlint 에러 0(기존 경고
+  2건 유지), vite build 성공, pytest 72/72(uv --python 3.12 — 로컬 PATH python 3.9의
+  3.10+ 문법 collection 실패 회피, repo 확립 관례).
+- 로컬 실측·배포 실측: T10·T11에서 기록 예정.
 
 ## 미결 질문
 
