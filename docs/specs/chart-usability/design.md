@@ -35,7 +35,7 @@ Detail (period 상태, seq 카운터)
 
 - **라인 MA 토글(R4)**: MA 체크박스 그룹을 ohlcv 한정에서 line까지 확장. 초기값은 타입별 — ohlcv 전부 켜짐(현행), line 전부 꺼짐. **적용 시점**: id 변경 effect의 fetch 시작 시점에는 type을 모르므로(검증 지적), fetch 성공 콜백에서 `record.type`을 보고 `setMaChecked(타입별 기본)`을 세팅한다. `MA_PERIODS`(20/60/120)·색상 매핑 공유.
 - **헤더 등락(R6)**: `record.series` 마지막 2행에서 계산(일반: (last−prev)/prev %, flows: foreign 컬럼 last−prev 억원 — summary·홈 테이블과 동일 규칙). 표기는 `formatPct`/`formatChangeAbs` + 전역 `.up`/`.down`/`.muted` 클래스. series가 2행 미만이면 생략.
-- 수급 모드 상태: `flowsWeekly: boolean` → `flowsMode: 'daily' | 'weekly' | 'cumulative'`(pill 3개, 기본 weekly — 현행 기본과 동일). 누적 모드 전용 상태: `cumSubjects`(기본 외국인만)·`cumMA`(기본 켜짐).
+- 수급 모드 상태: `flowsWeekly: boolean` → `flowsMode: 'daily' | 'weekly' | 'cumulative'`(pill 3개, 기본 weekly — 현행 기본과 동일). 누적 모드 전용 상태: `cumSubjects`(기본 3주체 전부 — 2026-08-08 사용자 피드백으로 외국인 단독에서 변경)·`cumMA`(기본 켜짐).
 
 ## 4. FlowsChart — 누적 모드 (R5)
 
@@ -45,7 +45,7 @@ Detail (period 상태, seq 카운터)
 - 렌더(누적 모드):
   - 표시 주체 각각: 원본 누적 라인(주체색 50% 투명 — hex에 alpha 붙인 8자리 hex 상수를 chartTheme에 추가, lineWidth 1) + **20영업일(≈4주) SMA 라인(주체색 불투명, lineWidth 2)** — 예시 이미지의 "가는 원본 + 굵은 평활선" 문법. `cumMA` 꺼짐이면 원본 라인만 불투명 lineWidth 2로.
   - **툴팁 규칙**(검증 지적): 크로스헤어 툴팁에는 원본 누적 라인 값만 표시하고 SMA 라인은 제외한다(시각 참고선) — 같은 주체 라벨 2행 중복과 React key 충돌 방지.
-  - 주체 토글: 기존 범례 행을 클릭 가능한 체크박스로 승격(일별·주간 모드에서는 현행처럼 항상 3주체 표시, 누적 모드에서만 토글 동작). 기본 외국인만.
+  - 주체 토글: 기존 범례 행을 클릭 가능한 체크박스로 승격(일별·주간 모드에서는 현행처럼 항상 3주체 표시, 누적 모드에서만 토글 동작). 기본 3주체 전부(사용자 피드백).
   - **요약 박스**: 범례 행 오른쪽 끝(`margin-left: auto`)에 표시 주체별 `누적 −186.8조원 · 오늘 −3.3조원 · 직전일 +1.4조원`(값 색은 등락 규칙 ±빨강/파랑). 차트 위 오버레이가 아니라 범례 행에 두어 크로스헤어 툴팁과 겹침을 원천 차단 — requirements R5의 위치 문구도 이에 맞춰 갱신함. 범례 행에 `flex-wrap: wrap`을 주어 모바일(390px)에서 줄바꿈으로 수용.
 - 일별/주간 모드: 무변경(범위 관리 패턴만 §1대로 적용).
 - 누적 라인의 등락색을 쓰지 않는 이유: 주체 식별색(회색/파랑/주황)이 이미 의미를 점유 — 요약 박스 숫자에만 등락색 적용.

@@ -35,10 +35,11 @@ const MA_COLOR_KEY: Record<number, 1 | 2 | 3> = { 20: 1, 60: 2, 120: 3 }
 const MA_ALL_ON: Record<number, boolean> = Object.fromEntries(MA_PERIODS.map((p) => [p, true]))
 const MA_ALL_OFF: Record<number, boolean> = Object.fromEntries(MA_PERIODS.map((p) => [p, false]))
 
+// 2026-08-08 사용자 피드백: 누적 모드 기본은 3주체 전부 표시(초안의 외국인 단독에서 변경)
 const DEFAULT_CUM_SUBJECTS: Record<FlowsSubjectKey, boolean> = {
-  individual: false,
+  individual: true,
   foreign: true,
-  institution: false,
+  institution: true,
 }
 
 /** 지표 유형별 시리즈 행에서 대표값 컬럼 인덱스: ohlcv=close(4), flows=foreign(2), line=value(1) */

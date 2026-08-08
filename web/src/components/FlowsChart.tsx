@@ -41,7 +41,7 @@ export interface FlowsChartProps {
   mode: FlowsMode;
   /** 기간 버튼 점프 요청 — seq 증가 시 보이는 범위만 전환(재생성 없음) */
   period?: PeriodRequest;
-  /** 누적 모드에서 표시할 주체(기본 외국인만). 일별·주간 모드에서는 무시(항상 3주체) */
+  /** 누적 모드에서 표시할 주체(기본 3주체 전부). 일별·주간 모드에서는 무시(항상 3주체) */
   cumSubjects?: Record<FlowsSubjectKey, boolean>;
   /** 누적 모드 범례 체크박스 토글 콜백 */
   onToggleSubject?: (key: FlowsSubjectKey) => void;
@@ -62,10 +62,11 @@ const SUBJECTS: { key: FlowsSubjectKey; label: string; idx: 1 | 2 | 3; color: st
   { key: "institution", label: "기관", idx: 3, color: FLOWS_SUBJECT_COLORS.institution },
 ];
 
+// Detail.tsx의 동명 상수와 동일 값 유지 — 기본 3주체 전부(2026-08-08 사용자 피드백)
 const DEFAULT_CUM_SUBJECTS: Record<FlowsSubjectKey, boolean> = {
-  individual: false,
+  individual: true,
   foreign: true,
-  institution: false,
+  institution: true,
 };
 
 /** 누적 평활선 기간 — 20영업일 ≈ 4주 (참고 예시 차트의 4w MA 관점) */
@@ -269,7 +270,7 @@ export default function FlowsChart(props: FlowsChartProps) {
       >
         {SUBJECTS.map((s) =>
           mode === "cumulative" ? (
-            // 누적 모드: 범례를 체크박스로 승격해 주체 토글(기본 외국인만)
+            // 누적 모드: 범례를 체크박스로 승격해 주체 토글
             <label
               key={s.key}
               style={{
