@@ -2,6 +2,24 @@
   "runs": [
     {
       "profile": "preopen",
+      "started_at": "2026-08-08T03:53:20.491947+00:00",
+      "results": {
+        "nasdaq": "ok",
+        "sp500": "ok",
+        "dow": "ok",
+        "usdkrw": "ok",
+        "usdjpy": "ok",
+        "eurusd": "ok",
+        "dxy": "ok",
+        "wti": "ok",
+        "gold": "ok",
+        "ust2y": "ok",
+        "ust10y": "ok",
+        "ust30y": "ok"
+      }
+    },
+    {
+      "profile": "preopen",
       "started_at": "2026-08-08T03:49:04.390649+00:00",
       "results": {
         "nasdaq": "ok",
@@ -146,18 +164,6 @@
         "usdkrw": "ok",
         "usdjpy": "ok",
         "wti": "ok"
-      }
-    },
-    {
-      "profile": "preopen",
-      "started_at": "2026-08-06T00:09:03.791581+00:00",
-      "results": {
-        "usdkrw": "ok",
-        "usdjpy": "ok",
-        "wti": "ok",
-        "ust2y": "ok",
-        "ust10y": "ok",
-        "ust30y": "ok"
       }
     }
   ]
