@@ -81,48 +81,23 @@ export function formatChangeAbs(value: number | null, unit: string): string {
 }
 
 /**
- * 뉴스 발행 시각 — KST 기준 오늘이면 "HH:MM", 아니면 "MM.DD HH:MM".
- * formatToParts로 조립해 로케일 출력 문자열 포맷을 가정하지 않고, 뷰어 로컬 타임존과
- * 무관하게 KST로 고정한다. now는 테스트 주입용.
+ * 뉴스 발행 시각 — 항상 KST "MM.DD HH:MM"(2026-08-08 사용자 피드백: 오늘 여부에 따른
+ * 날짜 생략 제거 — 날짜 상시 표기). formatToParts로 조립해 로케일 출력 문자열 포맷을
+ * 가정하지 않고, 뷰어 로컬 타임존과 무관하게 KST로 고정한다.
  */
-export function formatNewsTime(iso: string, now: Date = new Date()): string {
+export function formatNewsTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  const kstParts = (d: Date) => {
-    const parts = new Intl.DateTimeFormat('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(d);
-    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
-    return { ymd: `${get('year')}-${get('month')}-${get('day')}`, hm: `${get('hour')}:${get('minute')}`, md: `${get('month')}.${get('day')}` };
-  };
-  const target = kstParts(date);
-  const today = kstParts(now);
-  return target.ymd === today.ymd ? target.hm : `${target.md} ${target.hm}`;
-}
-
-/**
- * 뉴스 피드 행의 상대 시각(토스식). 헤드라인 블록의 KST 절대 시각(formatNewsTime)과 달리
- * 뷰어 시계 기준 diff. 미래 시각(수집·클라 시계 오차)은 "방금 전" 가드, 7일 이상은
- * 절대 시각으로 위임. now는 테스트 주입용.
- */
-export function formatNewsRelativeTime(iso: string, now: Date = new Date()): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  const diffMs = now.getTime() - date.getTime();
-  if (diffMs < 60 * 1000) return '방금 전'; // 미래 시각 포함
-  const minutes = Math.floor(diffMs / (60 * 1000));
-  if (minutes < 60) return `${minutes}분 전`;
-  const hours = Math.floor(diffMs / (60 * 60 * 1000));
-  if (hours < 24) return `${hours}시간 전`;
-  const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  if (days < 7) return `${days}일 전`;
-  return formatNewsTime(iso, now);
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${get('month')}.${get('day')} ${get('hour')}:${get('minute')}`;
 }
 
 /** ISO 문자열(UTC)을 "YYYY.MM.DD HH:MM" (KST)로 포맷한다. */

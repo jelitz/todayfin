@@ -99,6 +99,42 @@
   padding: calc(var(--space-unit) * 3) 0;
 }
 
+/* 페이지네이션 — 토스 리듬(목록 하단 중앙 번호 버튼), 탭과 동일 토큰 문법 */
+.news-pages {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-unit);
+  margin: calc(var(--space-unit) * 3) 0 0;
+}
+
+.news-page-btn {
+  min-width: 36px;
+  padding: 6px 10px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: var(--fs-body-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.news-page-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.news-page-btn:disabled {
+  color: var(--ink-muted);
+  cursor: default;
+}
+
+.news-page-btn-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
 .news-page-error {
   padding: calc(var(--space-unit) * 6) 0;
   text-align: center;

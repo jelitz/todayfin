@@ -60,7 +60,12 @@ describe('NewsView', () => {
     expect(html).toContain('rel="noopener noreferrer"')
   })
 
-  it('source가 null이면 구분점 없이 상대 시각만', () => {
+  it('피드 메타에 날짜+시간(KST MM.DD HH:MM)을 표기한다', () => {
+    const html = renderToStaticMarkup(<NewsView items={items} />)
+    expect(html).toContain('08.08 09:00') // 기사 6 = 00:00Z → KST 09:00
+  })
+
+  it('source가 null이면 구분점 없이 시각만', () => {
     // 피드에는 null source 1건만 — 구분점 '·'은 피드 메타에서만 쓰이므로(고정 블록은
     // 별도 span 문법) 문서 전체에 '·'가 없어야 한다
     const nullSource = [item(6, '2026-08-08T05:00:00+00:00', { source: null })]
@@ -74,5 +79,33 @@ describe('NewsView', () => {
     const html = renderToStaticMarkup(<NewsView items={items.slice(0, 5)} />)
     expect(html).toContain('더 표시할 뉴스가 없습니다')
     expect(html).not.toContain('news-feed-item')
+  })
+
+  describe('페이지네이션 (2026-08-08 사용자 피드백: 20건/페이지)', () => {
+    // 랭킹순 70건 — 주요뉴스 탭 피드는 65건(6~70위) = 4페이지(20·20·20·5)
+    const many: NewsItem[] = Array.from({ length: 70 }, (_, i) =>
+      item(i + 1, '2026-08-08T01:00:00+00:00'),
+    )
+
+    it('한 페이지에 20건만 렌더하고 페이지 버튼 1~4를 그린다', () => {
+      const html = renderToStaticMarkup(<NewsView items={many} />)
+      expect(html.match(/news-feed-item/g)).toHaveLength(20)
+      expect(html.indexOf('기사 6')).toBeLessThan(html.indexOf('기사 7')) // 6위부터
+      expect(html).not.toContain('기사 26') // 21번째 피드 항목(=26위)은 2페이지
+      expect(html.match(/news-page-btn/g)?.length).toBeGreaterThanOrEqual(4)
+      expect(html).toContain('aria-current="page"')
+    })
+
+    it('initialPage=4면 마지막 페이지의 잔여 5건만 렌더한다', () => {
+      const html = renderToStaticMarkup(<NewsView items={many} initialPage={4} />)
+      expect(html.match(/news-feed-item/g)).toHaveLength(5)
+      expect(html).toContain('기사 66')
+      expect(html).toContain('기사 70')
+    })
+
+    it('한 페이지 이하면 페이지 버튼을 그리지 않는다', () => {
+      const html = renderToStaticMarkup(<NewsView items={items} />)
+      expect(html).not.toContain('news-pages')
+    })
   })
 })
