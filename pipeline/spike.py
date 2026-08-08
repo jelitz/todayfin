@@ -205,6 +205,32 @@ def krx_drvprod():
     return _fn
 
 
+# ── 6) 뉴스 RSS (news-headlines 기능 후보 소스 — 러너 IP 차단 여부 확인) ────
+def news_rss_fetch(url: str):
+    def _fn():
+        import xml.etree.ElementTree as ET
+
+        r = requests.get(url, headers=UA, timeout=20)
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        items = root.findall(".//item")
+        if not items:
+            raise ValueError(f"item 0건 body={r.text[:200]!r}")
+        sample = []
+        for it in items[:3]:
+            src = it.find("source")
+            sample.append(
+                {
+                    "title": (it.findtext("title") or "").strip()[:80],
+                    "pubDate": (it.findtext("pubDate") or "").strip(),
+                    "source": src.text if src is not None else None,
+                }
+            )
+        return {"note": f"items={len(items)}", "sample": sample}
+
+    return _fn
+
+
 # ── 5) ECOS (키 있을 때만) ──────────────────────────────────────────────────
 def ecos_fetch():
     key = os.environ.get("ECOS_API_KEY")
@@ -252,6 +278,16 @@ def main():
     run("krx_samsung", krx_fetch("krx_samsung", "sto/stk_bydd_trd", filter_code="005930"))
     run("krx_skhynix", krx_fetch("krx_skhynix", "sto/stk_bydd_trd", filter_code="000660"))
     run("krx_drvprod_vkospi", krx_drvprod())
+    run(
+        "news_gnews_topic_business",
+        news_rss_fetch("https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ko&gl=KR&ceid=KR:ko"),
+    )
+    run(
+        "news_gnews_search_jeungsi",
+        news_rss_fetch("https://news.google.com/rss/search?q=%EC%A6%9D%EC%8B%9C%20when:1d&hl=ko&gl=KR&ceid=KR:ko"),
+    )
+    run("news_yna_economy", news_rss_fetch("https://www.yna.co.kr/rss/economy.xml"))
+    run("news_mk_headline", news_rss_fetch("https://www.mk.co.kr/rss/30000001/"))
 
     ok = sum(1 for v in RESULTS.values() if v["ok"])
     print(f"\n=== summary: {ok}/{len(RESULTS)} ok ===")
