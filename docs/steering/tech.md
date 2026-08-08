@@ -34,7 +34,7 @@
 | WTI 최근월 선물 | yfinance (CL=F) | — (실패 시 stale) | 불필요 |
 | 금 최근월 선물 | yfinance (GC=F) | — (실패 시 stale) | 불필요 |
 | 알상무 유튜브 영상 | YouTube Data API v3 | — (실패 시 기존 목록 유지) | YOUTUBE_API_KEY 필수 |
-| 경제뉴스 헤드라인 5건 | Google News RSS(비즈니스 토픽, 한국판 — 러너 접근 실측 spike run 31238546959) | — (실패 시 기존 유지, 24h 초과 시 프런트 숨김) | 불필요 |
+| 경제뉴스 헤드라인 70건(홈 5건 표시) | Google News RSS(비즈니스 토픽, 한국판 — 러너 접근 실측 spike run 31238546959) | — (실패 시 기존 유지, 24h 초과 시 프런트 숨김) | 불필요 |
 
 배경: KRX 정보데이터시스템 2026-02 로그인 필수화(pykrx 클라우드 부적합), FDR 0.9.110+ GitHub 캐시 전환. **Stooq는 2026년 도입된 봇 방지 챌린지로 완전 폐기(로컬·Actions 양쪽 확인)** — 원래 폴백이던 yfinance가 Stage 1 클라우드 실측에서 정상 동작해 1순위로 승격. 상세·근거는 `docs/data-rights.md`, Stage 1 결과는 `docs/specs/dashboard-mvp/implemented.md`.
 

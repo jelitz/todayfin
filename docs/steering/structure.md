@@ -46,7 +46,7 @@ todayfin/
 - `summary.json` — 전 지표 최근 3개월 압축 + 최신값·전일 대비 (홈 1회 fetch)
 - `meta.json` — 소스별 수집 상태·관측 기준일·stale 여부 (프론트 표시 + 스테일 승격 판단)
 - `youtube.json` — 알상무 최신 영상 목록 (media-collect, 매시간)
-- `news.json` — Google News 경제 헤드라인 상위 5건 (media-collect, 매시간·실패 시 기존 유지)
+- `news.json` — Google News 경제 헤드라인 상위 70건 — 홈은 5건 표시, 뉴스 페이지는 전체 (media-collect, 매시간·실패 시 기존 유지)
 
 ## 컨벤션
 
