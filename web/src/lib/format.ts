@@ -28,11 +28,37 @@ export function formatValue(value: number, unit: string): string {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
+    // eurusd 전용 — 1.15 수준의 값이라 2자리면 정보가 뭉개져 4자리 고정
+    case 'USD':
+      return value.toLocaleString('ko-KR', {
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
+      });
     case 'USD/bbl':
       return `${value.toFixed(2)} USD/bbl`;
+    // 금 선물 — 4천 달러대라 천 단위 구분 포함
+    case 'USD/oz':
+      return `${value.toLocaleString('ko-KR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} USD/oz`;
     default:
       return `${value.toLocaleString('ko-KR')}${unit}`;
   }
+}
+
+/**
+ * 상세 헤더의 숫자 부분 — 단위 표기는 별도 요소로 붙으므로 숫자만, unit별 소수 자리를 맞춘다.
+ * (formatValue는 일부 unit에서 단위 문자열까지 포함해 헤더에 쓰면 단위가 중복 표기됨)
+ */
+export function formatHeaderValue(value: number, unit: string): string {
+  if (unit === 'USD') {
+    return value.toLocaleString('ko-KR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  }
+  if (unit === '원' || unit === '억원') {
+    return Math.round(value).toLocaleString('ko-KR');
+  }
+  return value.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** 등락률을 항상 부호를 붙여 소수점 2자리로 포맷한다. null이면 "-". */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatChangeAbs, formatDate, formatPct, formatValue } from './format';
+import { formatChangeAbs, formatDate, formatHeaderValue, formatPct, formatValue } from './format';
 
 describe('formatValue', () => {
   it('formats 억원 under 10000 with comma and sign', () => {
@@ -39,8 +39,33 @@ describe('formatValue', () => {
     expect(formatValue(72.3, 'USD/bbl')).toBe('72.30 USD/bbl');
   });
 
+  it('formats USD (eurusd) with 4 decimals — 2자리면 1.16으로 뭉개짐 (global-indicators R4)', () => {
+    expect(formatValue(1.1562, 'USD')).toBe('1.1562');
+    expect(formatValue(1.15, 'USD')).toBe('1.1500');
+  });
+
+  it('formats USD/oz (gold) with comma and 2 decimals', () => {
+    expect(formatValue(4401.2998, 'USD/oz')).toBe('4,401.30 USD/oz');
+  });
+
   it('falls back to comma format + unit suffix for unknown units', () => {
     expect(formatValue(1234, 'bp')).toBe('1,234bp');
+  });
+});
+
+describe('formatHeaderValue', () => {
+  it('USD는 4자리, 단위 문자열 없이 숫자만', () => {
+    expect(formatHeaderValue(1.1562, 'USD')).toBe('1.1562');
+  });
+
+  it('원·억원은 정수 반올림', () => {
+    expect(formatHeaderValue(262500.6, '원')).toBe('262,501');
+    expect(formatHeaderValue(-3300, '억원')).toBe('-3,300');
+  });
+
+  it('그 외는 소수 2자리 고정 — 끝자리 0 유지', () => {
+    expect(formatHeaderValue(4401.2998, 'USD/oz')).toBe('4,401.30');
+    expect(formatHeaderValue(2650, 'pt')).toBe('2,650.00');
   });
 });
 

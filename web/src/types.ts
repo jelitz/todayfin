@@ -78,21 +78,30 @@ export interface HomeSection {
   subsections?: HomeSubsection[];
 }
 
-/** 지표 ID → 홈 화면 섹션 분류 (알상무 4분류). requirements.md R1 순서를 따른다. */
+/** 지표 ID → 홈 화면 섹션 분류 (알상무 4분류). requirements.md R1 순서를 따른다.
+ * 2026-08-08 global-indicators: 시장 가격·추세를 국내/해외 소그룹으로, 환율 소그룹에
+ * 유로/달러·달러인덱스 추가(제목 개칭), 원자재에 금 선물 추가. */
 export const SECTIONS: HomeSection[] = [
   { title: "수급", anchor: "section-flows", ids: ["investor_kospi", "investor_kosdaq"] },
-  { title: "시장 가격·추세", anchor: "section-price-trend", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
+  {
+    title: "시장 가격·추세",
+    anchor: "section-price-trend",
+    subsections: [
+      { title: "국내", ids: ["kospi", "kosdaq", "samsung", "skhynix"] },
+      { title: "해외", ids: ["nasdaq", "sp500", "dow", "nikkei"] },
+    ],
+  },
   { title: "변동성·리스크", anchor: "section-risk", ids: ["vkospi"] },
   {
     title: "거시·통화",
     anchor: "section-macro",
     subsections: [
-      { title: "환율", ids: ["usdkrw", "usdjpy"] },
+      { title: "환율·달러인덱스", ids: ["usdkrw", "usdjpy", "eurusd", "dxy"] },
       { title: "미국 국채", ids: ["ust2y", "ust10y", "ust30y"] },
       { title: "한국 국채", ids: ["ktb3y"] },
     ],
   },
-  { title: "원자재", anchor: "section-commodity", ids: ["wti"] },
+  { title: "원자재", anchor: "section-commodity", ids: ["wti", "gold"] },
 ];
 
 /** data/youtube.json 의 영상 1건 — pipeline/collect_media.py 스키마와 1:1 대응 */

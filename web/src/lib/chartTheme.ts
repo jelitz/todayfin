@@ -48,3 +48,13 @@ export const FLOWS_SUBJECT_COLORS = {
   foreign: "#0051c7",
   institution: "#f59e0b",
 } as const;
+
+/**
+ * 누적 모드의 원본 누적 라인용 50% 투명 변형(8자리 hex) — 4주 평활선(불투명·굵게)과
+ * "가는 원본 + 굵은 평활선" 문법을 이룬다. docs/specs/chart-usability/design.md §4.
+ */
+export const FLOWS_SUBJECT_COLORS_FADED = {
+  individual: "#a3a3a380",
+  foreign: "#0051c780",
+  institution: "#f59e0b80",
+} as const;

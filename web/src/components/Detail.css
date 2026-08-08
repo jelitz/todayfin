@@ -98,6 +98,13 @@
   color: var(--ink-body);
 }
 
+/* 헤더 전일 대비 등락(R6) — 색은 전역 .up/.down/.muted 데이터 잉크 규칙 */
+.detail-change {
+  font-size: var(--fs-body-md);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
 .detail-meta-row {
   display: flex;
   gap: 16px;

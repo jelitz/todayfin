@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { JSX } from 'react'
-import type { FlowsRow, IndicatorRecord, LineRow, OhlcvRow, SeriesRow } from '../types'
+import type { FlowsRow, IndicatorRecord, LineRow, OhlcvRow } from '../types'
 import PriceChart from '../components/PriceChart'
-import FlowsChart from '../components/FlowsChart'
+import FlowsChart, { type FlowsMode, type FlowsSubjectKey } from '../components/FlowsChart'
+import { formatHeaderValue, formatPct, formatChangeAbs } from '../lib/format'
 import { isStale, daysSince } from '../lib/stale'
 import './Detail.css'
 
@@ -13,15 +14,16 @@ export interface DetailProps {
 
 type PeriodKey = '3M' | '6M' | '1Y' | '3Y' | '5Y'
 
-const PERIOD_PRESETS: { key: PeriodKey; label: string; days: number }[] = [
+/** days는 보이는 범위 폭 — 데이터를 자르지 않는다(chart-usability R1). null = 전체(fitContent). */
+const PERIOD_PRESETS: { key: PeriodKey; label: string; days: number | null }[] = [
   { key: '3M', label: '3M', days: 90 },
   { key: '6M', label: '6M', days: 182 },
   { key: '1Y', label: '1Y', days: 365 },
   { key: '3Y', label: '3Y', days: 365 * 3 },
-  { key: '5Y', label: '5Y', days: 365 * 5 },
+  { key: '5Y', label: '5Y', days: null },
 ]
 
-/** ohlcv(캔들) 지표 전용 MA 기간. line 지표(환율·국채·WTI)는 2026-08-03 사용자 피드백으로 제외. */
+/** MA 기간 — ohlcv는 기본 전부 켜짐, line은 기본 꺼짐(옵트인, chart-usability R4). */
 const MA_PERIODS = [20, 60, 120] as const
 
 /** requirements.md R1: 캔들+거래량이 필요한 지표(코스피/코스닥은 캔들만). */
@@ -30,43 +32,58 @@ const VOLUME_INDICATOR_IDS = new Set(['samsung', 'skhynix'])
 /** 20/60/120일 MA → design.md ma-1/ma-2/ma-3 색상 매핑용 키 (lib/chartTheme.ts의 실제 색상과 대응) */
 const MA_COLOR_KEY: Record<number, 1 | 2 | 3> = { 20: 1, 60: 2, 120: 3 }
 
-/** 지표 유형별 시리즈 마지막 행에서 대표값을 뽑는다: ohlcv=close(4), flows=foreign(2), line=value(1) */
+const MA_ALL_ON: Record<number, boolean> = Object.fromEntries(MA_PERIODS.map((p) => [p, true]))
+const MA_ALL_OFF: Record<number, boolean> = Object.fromEntries(MA_PERIODS.map((p) => [p, false]))
+
+const DEFAULT_CUM_SUBJECTS: Record<FlowsSubjectKey, boolean> = {
+  individual: false,
+  foreign: true,
+  institution: false,
+}
+
+/** 지표 유형별 시리즈 행에서 대표값 컬럼 인덱스: ohlcv=close(4), flows=foreign(2), line=value(1) */
+function headlineIndex(type: IndicatorRecord['type']): number {
+  if (type === 'ohlcv') return 4
+  if (type === 'flows') return 2
+  return 1
+}
+
 function getLatestValue(record: IndicatorRecord): number | null {
   const rows = record.series
   if (rows.length === 0) return null
-  const last = rows[rows.length - 1]
-  switch (record.type) {
-    case 'ohlcv':
-      return (last as OhlcvRow)[4]
-    case 'flows':
-      return (last as FlowsRow)[2]
-    case 'line':
-      return (last as LineRow)[1]
-    default:
-      return null
+  return rows[rows.length - 1][headlineIndex(record.type)] as number
+}
+
+interface HeaderChange {
+  text: string
+  cls: 'up' | 'down' | 'muted'
+  arrow: string
+}
+
+/** 헤더 등락(R6) — summary·홈 테이블과 동일 규칙: flows는 절대 증감액, 그 외 등락률 %. */
+function computeChange(record: IndicatorRecord): HeaderChange | null {
+  const rows = record.series
+  if (rows.length < 2) return null
+  const idx = headlineIndex(record.type)
+  const last = rows[rows.length - 1][idx] as number
+  const prev = rows[rows.length - 2][idx] as number
+
+  let value: number
+  let text: string
+  if (record.type === 'flows') {
+    value = Math.round((last - prev) * 100) / 100
+    text = formatChangeAbs(value, record.unit)
+  } else {
+    if (prev === 0) return null
+    value = Math.round(((last - prev) / prev) * 100 * 100) / 100
+    text = formatPct(value)
+  }
+  return {
+    text,
+    cls: value === 0 ? 'muted' : value > 0 ? 'up' : 'down',
+    arrow: value === 0 ? '' : value > 0 ? '▲' : '▼',
   }
 }
-
-function formatValue(value: number): string {
-  return value.toLocaleString('ko-KR', { maximumFractionDigits: 2 })
-}
-
-function toLocalISODate(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-/** 오늘 기준 역산한 days일 이내로 시리즈를 필터링 */
-function filterByDays(series: SeriesRow[], days: number): SeriesRow[] {
-  const cutoff = new Date()
-  cutoff.setDate(cutoff.getDate() - days)
-  const cutoffStr = toLocalISODate(cutoff)
-  return series.filter((row) => row[0] >= cutoffStr)
-}
-
-const INITIAL_MA_CHECKED: Record<number, boolean> = Object.fromEntries(MA_PERIODS.map((p) => [p, true]))
 
 export default function Detail({ id, onBack }: DetailProps): JSX.Element {
   const [record, setRecord] = useState<IndicatorRecord | null>(null)
@@ -74,9 +91,12 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
   const [error, setError] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
 
-  const [period, setPeriod] = useState<PeriodKey>('1Y')
-  const [maChecked, setMaChecked] = useState<Record<number, boolean>>(INITIAL_MA_CHECKED)
-  const [flowsWeekly, setFlowsWeekly] = useState(true)
+  // seq는 같은 버튼 재클릭도 점프시키기 위한 카운터 — 차트는 seq 변화만 보고 범위를 전환한다
+  const [period, setPeriod] = useState<{ key: PeriodKey; seq: number }>({ key: '1Y', seq: 0 })
+  const [maChecked, setMaChecked] = useState<Record<number, boolean>>(MA_ALL_ON)
+  const [flowsMode, setFlowsMode] = useState<FlowsMode>('weekly')
+  const [cumSubjects, setCumSubjects] = useState<Record<FlowsSubjectKey, boolean>>(DEFAULT_CUM_SUBJECTS)
+  const [cumMA, setCumMA] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -84,9 +104,10 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
     setLoading(true)
     setError(false)
     setRecord(null)
-    setPeriod('1Y')
-    setMaChecked(INITIAL_MA_CHECKED)
-    setFlowsWeekly(true)
+    setPeriod({ key: '1Y', seq: 0 })
+    setFlowsMode('weekly')
+    setCumSubjects(DEFAULT_CUM_SUBJECTS)
+    setCumMA(true)
 
     // 캐시 버스팅 — App.tsx의 summary.json 폴링과 동일한 이유(GitHub Pages CDN·브라우저 캐시로
     // 장중 준실시간 갱신분이 가려지는 것 방지)
@@ -98,6 +119,8 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
       .then((data) => {
         if (!cancelled) {
           setRecord(data)
+          // MA 기본값은 타입을 알아야 정해진다(fetch 시작 시점엔 모름) — ohlcv 켜짐/line 꺼짐
+          setMaChecked(data.type === 'ohlcv' ? MA_ALL_ON : MA_ALL_OFF)
           setLoading(false)
         }
       })
@@ -113,13 +136,9 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
     }
   }, [id, reloadKey])
 
-  const periodDays = PERIOD_PRESETS.find((p) => p.key === period)?.days ?? 365
-  const filteredSeries = useMemo(
-    () => (record ? filterByDays(record.series, periodDays) : []),
-    [record, periodDays],
-  )
+  const periodDays = PERIOD_PRESETS.find((p) => p.key === period.key)?.days ?? 365
   const maPeriods = useMemo<number[]>(() => {
-    if (!record || record.type !== 'ohlcv') return []
+    if (!record || record.type === 'flows') return []
     return MA_PERIODS.filter((p) => maChecked[p])
   }, [record, maChecked])
 
@@ -151,8 +170,12 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
   }
 
   const latestValue = getLatestValue(record)
+  const change = computeChange(record)
   const stale = isStale(record.observed_last)
   const showVolume = VOLUME_INDICATOR_IDS.has(id)
+  // eurusd(unit USD)만 소수 4자리 — 상세 헤더·차트 y축·툴팁 정밀도(global-indicators §2-3)
+  const precision = record.unit === 'USD' ? 4 : 2
+  const periodRequest = { days: periodDays, seq: period.seq }
 
   return (
     <div className="detail">
@@ -168,8 +191,16 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
           )}
         </div>
         <div className="detail-value-row">
-          <span className="detail-latest-value">{latestValue !== null ? formatValue(latestValue) : '-'}</span>
+          <span className="detail-latest-value">
+            {latestValue !== null ? formatHeaderValue(latestValue, record.unit) : '-'}
+          </span>
           <span className="detail-unit">{record.unit}</span>
+          {change && (
+            <span className={`detail-change ${change.cls}`}>
+              {change.arrow ? `${change.arrow} ` : ''}
+              {change.text}
+            </span>
+          )}
         </div>
         <div className="detail-meta-row">
           <span className="detail-observed">기준일 {record.observed_last}</span>
@@ -183,15 +214,15 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
             <button
               key={p.key}
               type="button"
-              className={period === p.key ? 'pill-btn pill-btn-active' : 'pill-btn'}
-              onClick={() => setPeriod(p.key)}
+              className={period.key === p.key ? 'pill-btn pill-btn-active' : 'pill-btn'}
+              onClick={() => setPeriod((prev) => ({ key: p.key, seq: prev.seq + 1 }))}
             >
               {p.label}
             </button>
           ))}
         </div>
 
-        {record.type === 'ohlcv' && (
+        {record.type !== 'flows' && (
           <div className="detail-ma-group" role="group" aria-label="이동평균선">
             {MA_PERIODS.map((p) => (
               <label key={p} className="detail-ma-option">
@@ -209,10 +240,28 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
 
         {record.type === 'flows' && (
           <div className="detail-ma-group" role="group" aria-label="집계 방식">
-            <label className="detail-ma-option">
-              <input type="checkbox" checked={flowsWeekly} onChange={() => setFlowsWeekly((v) => !v)} />
-              주간집계
-            </label>
+            {(
+              [
+                { mode: 'daily', label: '일별' },
+                { mode: 'weekly', label: '주간' },
+                { mode: 'cumulative', label: '누적' },
+              ] as { mode: FlowsMode; label: string }[]
+            ).map((m) => (
+              <button
+                key={m.mode}
+                type="button"
+                className={flowsMode === m.mode ? 'pill-btn pill-btn-active' : 'pill-btn'}
+                onClick={() => setFlowsMode(m.mode)}
+              >
+                {m.label}
+              </button>
+            ))}
+            {flowsMode === 'cumulative' && (
+              <label className="detail-ma-option">
+                <input type="checkbox" checked={cumMA} onChange={() => setCumMA((v) => !v)} />
+                4주 평활
+              </label>
+            )}
           </div>
         )}
       </div>
@@ -220,17 +269,22 @@ export default function Detail({ id, onBack }: DetailProps): JSX.Element {
       <div className="detail-chart">
         {record.type === 'flows' ? (
           <FlowsChart
-            rows={filteredSeries as FlowsRow[]}
-            mode={flowsWeekly ? 'weekly' : 'daily'}
+            rows={record.series as FlowsRow[]}
+            mode={flowsMode}
+            period={periodRequest}
+            cumSubjects={cumSubjects}
+            onToggleSubject={(key) => setCumSubjects((prev) => ({ ...prev, [key]: !prev[key] }))}
+            cumMA={cumMA}
             height={460}
           />
         ) : (
           <PriceChart
             type={record.type}
-            rows={filteredSeries as (OhlcvRow | LineRow)[]}
-            fullRows={record.series as (OhlcvRow | LineRow)[]}
+            rows={record.series as (OhlcvRow | LineRow)[]}
             maPeriods={maPeriods}
             showVolume={showVolume}
+            period={periodRequest}
+            precision={precision}
             height={460}
           />
         )}

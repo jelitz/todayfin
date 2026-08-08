@@ -113,6 +113,20 @@ tbody:first-of-type .itable-section-title {
   word-break: keep-all;
 }
 
+/* 전역 .up/.down/.muted(tokens.css)가 `.itable-row td`의 color에 명시도로 밀려
+   등락 색이 회색으로 고정되던 회귀 보정 — 데이터 잉크(상승 빨강/하락 파랑)는 테마 불변 */
+.itable-row td.up {
+  color: var(--up);
+}
+
+.itable-row td.down {
+  color: var(--down);
+}
+
+.itable-row td.muted {
+  color: var(--ink-muted);
+}
+
 .itable-spark-cell {
   text-align: center;
 }

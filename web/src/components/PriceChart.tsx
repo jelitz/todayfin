@@ -14,6 +14,13 @@ import {
 import type { OhlcvRow, LineRow } from "../types";
 import { sma } from "../lib/ma";
 import {
+  applyPeriod,
+  restoreRange,
+  trackVisibleRange,
+  type PeriodRequest,
+  type SavedRange,
+} from "../lib/chartRange";
+import {
   CHART_COLOR_UP,
   CHART_COLOR_DOWN,
   CHART_COLOR_VOLUME,
@@ -24,17 +31,19 @@ import { useTheme } from "./ThemeProvider";
 
 export interface PriceChartProps {
   type: "ohlcv" | "line";
-  /** 화면에 표시할(기간 필터링된) 행 — date 오름차순 */
-  rows: (OhlcvRow | LineRow)[];
   /**
-   * MA 계산용 전체 시계열(워밍업 포함, date 오름차순). 생략 시 rows로만 계산하므로
-   * 긴 기간 MA(60/120일)가 표시 구간 앞부분에서 비어 보일 수 있다.
+   * 전체 시계열(약 5년, date 오름차순). 기간은 데이터를 자르지 않고 보이는 범위로만
+   * 조작한다 — docs/specs/chart-usability/design.md §1. MA도 항상 전체로 계산(워밍업 문제 소멸).
    */
-  fullRows?: (OhlcvRow | LineRow)[];
+  rows: (OhlcvRow | LineRow)[];
   /** 예: [20,60,120]. 지정된 각 기간의 SMA를 오버레이 라인으로 표시 */
   maPeriods?: number[];
   /** ohlcv에서 거래량 서브패널 표시 여부 (요구사항 R1: 삼성전자·SK하이닉스만 해당) */
   showVolume?: boolean;
+  /** 기간 버튼 점프 요청 — seq 증가 시 보이는 범위만 전환(재생성 없음) */
+  period?: PeriodRequest;
+  /** line 시리즈 y축·툴팁 소수 자리(기본 2) — eurusd 등 4자리 지표용 */
+  precision?: number;
   height?: number; // 기본 400
 }
 
@@ -45,20 +54,25 @@ interface TooltipState {
   lines: { label: string; value: string; color: string }[];
 }
 
-function formatNum(v: number): string {
-  return v.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
-}
-
 export default function PriceChart(props: PriceChartProps) {
-  const { type, rows, fullRows, maPeriods, showVolume, height = 400 } = props;
+  const { type, rows, maPeriods, showVolume, period, precision = 2, height = 400 } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  // 줌·팬 포함 마지막 보이는 범위 — 옵션·테마 변경으로 차트를 재생성해도 이 범위를 복원한다(R3)
+  const savedRangeRef = useRef<SavedRange | null>(null);
+  // effect A(재생성)가 period를 deps로 가지면 기간 점프마다 재생성되므로 ref로만 읽는다
+  const periodRef = useRef<PeriodRequest | undefined>(period);
+  periodRef.current = period;
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const { theme } = useTheme();
   const surface = getChartSurfaceTheme(theme);
 
   const isEmpty = rows.length === 0;
 
+  const formatNum = (v: number): string =>
+    v.toLocaleString("ko-KR", { maximumFractionDigits: precision });
+
+  // effect A: 차트 생성/재생성 — effect B(기간 점프)보다 먼저 선언해 마운트 시 생성이 선행된다
   useEffect(() => {
     if (isEmpty || !containerRef.current) return;
     setTooltip(null);
@@ -82,6 +96,10 @@ export default function PriceChart(props: PriceChartProps) {
       },
       rightPriceScale: {
         borderColor: surface.grid,
+      },
+      // 모바일 세로 스와이프는 페이지 스크롤로 남긴다(R2) — 수평 팬·핀치·휠 줌은 기본값 유지
+      handleScroll: {
+        vertTouchDrag: false,
       },
     });
     chartRef.current = chart;
@@ -111,6 +129,7 @@ export default function PriceChart(props: PriceChartProps) {
       const lineSeries = chart.addSeries(LineSeries, {
         color: surface.line,
         lineWidth: 2,
+        priceFormat: { type: "price", precision, minMove: Math.pow(10, -precision) },
       });
       const data: LineData[] = lineRows.map(([date, value]) => ({
         time: date as unknown as UTCTimestamp,
@@ -138,35 +157,42 @@ export default function PriceChart(props: PriceChartProps) {
       volumeSeries.setData(volData);
     }
 
-    // MA 오버레이 — fullRows(워밍업 포함 전체)로 계산 후 rows(표시 구간) 날짜만 취함
+    // MA 오버레이 — 전체 시계열로 계산·표시(범위 밖 구간은 스크롤로 보임)
     const maSeriesList: { period: number; series: ISeriesApi<"Line"> }[] = [];
     if (maPeriods && maPeriods.length > 0) {
-      const source = fullRows && fullRows.length > 0 ? fullRows : rows;
-      const sourceBaseValues =
+      const baseValues =
         type === "ohlcv"
-          ? (source as OhlcvRow[]).map(([, , , , close]) => close)
-          : (source as LineRow[]).map(([, value]) => value);
-      const sourceDates = source.map((r) => r[0]);
-      const visibleDates = new Set(rows.map((r) => r[0]));
+          ? (rows as OhlcvRow[]).map(([, , , , close]) => close)
+          : (rows as LineRow[]).map(([, value]) => value);
+      const dates = rows.map((r) => r[0]);
 
-      maPeriods.forEach((period, idx) => {
-        const maAll = sma(sourceBaseValues, period);
-        const maByDate = new Map(sourceDates.map((d, i) => [d, maAll[i]]));
+      maPeriods.forEach((maPeriod, idx) => {
+        const maAll = sma(baseValues, maPeriod);
         const maSeries = chart.addSeries(LineSeries, {
-          color: maColor(period, idx),
+          color: maColor(maPeriod, idx),
           lineWidth: 1,
         });
-        const maData: LineData[] = sourceDates
-          .filter((d) => visibleDates.has(d))
-          .map((d) => ({ time: d, value: maByDate.get(d) ?? null }))
+        const maData: LineData[] = dates
+          .map((d, i) => ({ time: d, value: maAll[i] }))
           .filter((d): d is { time: string; value: number } => d.value !== null)
           .map((d) => ({ time: d.time as unknown as UTCTimestamp, value: d.value }));
         maSeries.setData(maData);
-        maSeriesList.push({ period, series: maSeries });
+        maSeriesList.push({ period: maPeriod, series: maSeries });
       });
     }
 
-    chart.timeScale().fitContent();
+    // 범위: 저장된 범위가 있으면 복원(스냅 보정 포함), 첫 진입이면 기본 기간(1Y) 적용
+    const lastDate = rows[rows.length - 1][0];
+    if (savedRangeRef.current) {
+      restoreRange(chart, savedRangeRef.current, lastDate);
+    } else {
+      applyPeriod(
+        chart,
+        rows.map((r) => r[0]),
+        periodRef.current?.days ?? 365,
+      );
+    }
+    trackVisibleRange(chart, savedRangeRef);
 
     // 크로스헤어 툴팁
     const container = containerRef.current;
@@ -195,10 +221,10 @@ export default function PriceChart(props: PriceChartProps) {
           lines.push({ label: "거래량", value: formatNum(vd.value), color: CHART_COLOR_VOLUME });
         }
       }
-      maSeriesList.forEach(({ period, series }) => {
+      maSeriesList.forEach(({ period: maPeriod, series }) => {
         const md = param.seriesData.get(series);
         if (md && "value" in md) {
-          lines.push({ label: `MA${period}`, value: formatNum(md.value), color: series.options().color as string });
+          lines.push({ label: `MA${maPeriod}`, value: formatNum(md.value), color: series.options().color as string });
         }
       });
       if (lines.length === 0) {
@@ -225,7 +251,22 @@ export default function PriceChart(props: PriceChartProps) {
       chart.remove();
       chartRef.current = null;
     };
-  }, [rows, fullRows, type, maPeriods, showVolume, height, isEmpty, theme]);
+    // period는 의도적으로 제외(기간 점프는 effect B) — periodRef로만 읽는다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, type, maPeriods, showVolume, precision, height, isEmpty, theme]);
+
+  // effect B: 기간 버튼 점프 — 재생성 없이 보이는 범위만 전환(R1)
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart || !period || rows.length === 0) return;
+    applyPeriod(
+      chart,
+      rows.map((r) => r[0]),
+      period.days,
+    );
+    // seq만 본다 — rows 변경은 effect A가 재생성하며 범위를 복원한다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period?.seq]);
 
   if (isEmpty) {
     return <div>표시할 데이터가 없습니다</div>;

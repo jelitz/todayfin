@@ -93,6 +93,48 @@ INDICATORS = {
         fallback_source_label="fdr:000660",
         fallback_source_name=KRX_NAME,
     ),
+    "nasdaq": dict(
+        name="나스닥",
+        type="ohlcv",
+        unit="pt",
+        instrument="나스닥 종합지수 일봉 OHLCV",
+        source_label="yfinance:^IXIC",
+        source_name=YAHOO_FINANCE_NAME,
+        module=yfinance_source,
+        profile="preopen",
+    ),
+    "sp500": dict(
+        name="S&P 500",
+        type="ohlcv",
+        unit="pt",
+        instrument="S&P 500 지수 일봉 OHLCV",
+        source_label="yfinance:^GSPC",
+        source_name=YAHOO_FINANCE_NAME,
+        module=yfinance_source,
+        profile="preopen",
+    ),
+    "dow": dict(
+        name="다우존스",
+        type="ohlcv",
+        unit="pt",
+        instrument="다우존스 산업평균지수 일봉 OHLCV",
+        source_label="yfinance:^DJI",
+        source_name=YAHOO_FINANCE_NAME,
+        module=yfinance_source,
+        profile="preopen",
+    ),
+    "nikkei": dict(
+        name="니케이 225",
+        type="ohlcv",
+        unit="pt",
+        instrument="니케이 225 지수 일봉 OHLCV",
+        source_label="yfinance:^N225",
+        source_name=YAHOO_FINANCE_NAME,
+        module=yfinance_source,
+        # 도쿄증권거래소 마감 15:30 KST(2024-11 연장) → afterclose(18:40)에서 당일 종가 확보.
+        # preopen이면 항상 하루 늦다 — docs/specs/global-indicators/design.md §1-2.
+        profile="afterclose",
+    ),
     "vkospi": dict(
         name="VKOSPI",
         type="line",
@@ -126,12 +168,42 @@ INDICATORS = {
         module=yfinance_source,
         profile="preopen",
     ),
+    "eurusd": dict(
+        name="유로/달러",
+        type="line",
+        unit="USD",
+        instrument="EUR/USD 글로벌 FX 시장환율 일봉 종가",
+        source_label="yfinance:EURUSD=X",
+        source_name=YAHOO_FINANCE_NAME,
+        module=yfinance_source,
+        profile="preopen",
+    ),
+    "dxy": dict(
+        name="달러인덱스",
+        type="line",
+        unit="pt",
+        instrument="ICE 미국 달러인덱스(DXY) 일봉 종가",
+        source_label="yfinance:DX-Y.NYB",
+        source_name=YAHOO_FINANCE_NAME,
+        module=yfinance_source,
+        profile="preopen",
+    ),
     "wti": dict(
         name="WTI",
         type="line",
         unit="USD/bbl",
         instrument="NYMEX WTI 최근월 선물 종가",
         source_label="yfinance:CL=F",
+        source_name=YAHOO_FINANCE_NAME,
+        module=yfinance_source,
+        profile="preopen",
+    ),
+    "gold": dict(
+        name="금 선물",
+        type="line",
+        unit="USD/oz",
+        instrument="COMEX 금 최근월 선물 종가",
+        source_label="yfinance:GC=F",
         source_name=YAHOO_FINANCE_NAME,
         module=yfinance_source,
         profile="preopen",
@@ -193,8 +265,10 @@ PROFILES = {
 }
 PROFILES["all"] = list(INDICATORS.keys())
 
-# 정규장 중(09:00~15:30 KST) 30분 간격 준실시간 수집 대상 — 국채 4종은 하루 1회 고시값이라 제외.
+# 정규장 중(09:00~15:30 KST) 30분 간격 준실시간 수집 대상 — 국채 4종은 하루 1회 고시값,
+# 미국 지수 3종은 한국 장중에 휴장, VKOSPI는 T+1 공표라 제외.
 # 지표의 "주 프로필"(preopen/afterclose, 백필·확정치 담당)과는 별개로 부가 참여하는 집합.
+# web/src/lib/realtime.ts의 REALTIME_ELIGIBLE_IDS와 수동 동기화 — 바꿀 때 함께 수정할 것.
 PROFILES["market_hours"] = [
     "investor_kospi",
     "investor_kosdaq",
@@ -202,7 +276,11 @@ PROFILES["market_hours"] = [
     "kosdaq",
     "samsung",
     "skhynix",
+    "nikkei",
     "usdkrw",
     "usdjpy",
+    "eurusd",
+    "dxy",
     "wti",
+    "gold",
 ]

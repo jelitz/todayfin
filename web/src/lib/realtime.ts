@@ -4,7 +4,8 @@
  * observed_last(YYYY-MM-DD)가 오늘(KST)과 같고 대상 지표 집합에 속하면 "장중"으로 간주한다.
  */
 
-/** pipeline/indicators.py PROFILES["market_hours"]와 동일 목록 — 국채 4종은 하루 1회 고시값이라 제외. */
+/** pipeline/indicators.py PROFILES["market_hours"]와 동일 목록(수동 동기화) — 국채 4종은
+ * 하루 1회 고시값, 미국 지수 3종은 한국 장중 휴장, VKOSPI는 T+1 공표라 제외. */
 export const REALTIME_ELIGIBLE_IDS = new Set([
   'investor_kospi',
   'investor_kosdaq',
@@ -12,9 +13,13 @@ export const REALTIME_ELIGIBLE_IDS = new Set([
   'kosdaq',
   'samsung',
   'skhynix',
+  'nikkei',
   'usdkrw',
   'usdjpy',
+  'eurusd',
+  'dxy',
   'wti',
+  'gold',
 ]);
 
 /** 현재 시각을 "YYYY-MM-DD"(Asia/Seoul 기준)로 반환한다. */
