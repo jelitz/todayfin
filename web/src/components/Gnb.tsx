@@ -11,6 +11,7 @@ export interface GnbTab {
 /** GNB 페이지 탭. 기존 섹션 스크롤 탭을 페이지 전환 탭으로 교체(requirements.md R1). */
 export const GNB_TABS: GnbTab[] = [
   { label: '홈', hash: '#/', routeName: 'home' },
+  { label: '뉴스', hash: '#/news', routeName: 'news' },
   { label: '소개', hash: '#/about', routeName: 'about' },
   { label: '알상무', hash: '#/alsangmoo', routeName: 'alsangmoo' },
 ]

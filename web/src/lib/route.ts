@@ -6,6 +6,7 @@
 export type Route =
   | { name: "home" }
   | { name: "detail"; id: string }
+  | { name: "news" }
   | { name: "about" }
   | { name: "alsangmoo"; videoId: string | null };
 
@@ -28,6 +29,7 @@ export function parseHash(hash: string): Route {
   const videoMatch = clean.match(/^\/alsangmoo\/v\/([A-Za-z0-9_-]+)$/);
   if (videoMatch) return { name: "alsangmoo", videoId: videoMatch[1] };
 
+  if (clean === "/news") return { name: "news" };
   if (clean === "/about") return { name: "about" };
   if (clean === "/alsangmoo") return { name: "alsangmoo", videoId: null };
 

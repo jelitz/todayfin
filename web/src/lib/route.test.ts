@@ -14,6 +14,14 @@ describe("parseHash", () => {
     expect(parseHash("#/about")).toEqual({ name: "about" });
   });
 
+  it("#/news 는 뉴스 페이지", () => {
+    expect(parseHash("#/news")).toEqual({ name: "news" });
+  });
+
+  it("#/news 하위 변형 경로는 홈으로 폴백", () => {
+    expect(parseHash("#/news/x")).toEqual({ name: "home" });
+  });
+
   it("#/alsangmoo 는 알상무 페이지(영상 미선택)", () => {
     expect(parseHash("#/alsangmoo")).toEqual({ name: "alsangmoo", videoId: null });
   });
