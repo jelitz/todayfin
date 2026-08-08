@@ -1,4 +1,4 @@
-"""뉴스 수집 — Google News 비즈니스 헤드라인 상위 5건을 data/news.json으로 저장.
+"""뉴스 수집 — Google News 비즈니스 헤드라인 상위 70건을 data/news.json으로 저장.
 
 collect_media.py와 동일 골격(의도적 대칭 — 한쪽을 보면 다른 쪽이 보인다):
 재시도 → 검증 → 스테이징 → 원자적 교체, 실패 시 기존 파일 유지 + exit 0.
@@ -28,7 +28,7 @@ if hasattr(sys.stdout, "reconfigure"):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sources import google_news  # noqa: E402
 
-_LIMIT = 5
+_LIMIT = 70
 _RETRIES = 2
 _RETRY_DELAYS = [5, 15]
 _STALE_WARNING_AGE = timedelta(hours=24)
