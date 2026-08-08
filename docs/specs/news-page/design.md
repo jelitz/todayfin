@@ -71,16 +71,14 @@ export function sortByPublishedDesc(items: NewsItem[]): NewsItem[]
 - `isFreshNews`·`NEWS_MAX_AGE_MS`는 현재 Home.tsx 내부에 있는 것을 **이동**(중복 금지).
   Home은 import로 전환 — 동작 불변.
 
-## lib/format.ts — `formatNewsRelativeTime(iso, now?)`
+## lib/format.ts — `formatNewsTime(iso)`
 
-피드 행의 토스식 상대 시각. 경계는 floor:
+**2026-08-08 사용자 피드백 개정**: 뉴스 시각은 어디서나(홈 블록·고정 블록·피드 행)
+**항상 KST "MM.DD HH:MM"** — 오늘 여부에 따른 날짜 생략을 제거하고 `now` 파라미터도
+삭제(오늘 비교가 사라져 출력이 현재 시각과 무관). 파싱 불능 → `''`.
 
-- 파싱 불능 → `''` / **미래 시각(음수 diff) → "방금 전"**(수집·클라 시계 오차 가드)
-- < 60초 → "방금 전" / < 60분 → "n분 전" / < 24시간 → "n시간 전" / < 7일 → "n일 전"
-- ≥ 7일 → `formatNewsTime(iso, now)` 위임("MM.DD HH:MM" — 기존 KST 규칙 재사용)
-
-헤드라인 고정 블록은 홈과 동일하게 `formatNewsTime`(절대 시각) 유지 — "메인 페이지에 뜬
-것처럼" 요구의 일부.
+초판의 토스식 상대 시각(`formatNewsRelativeTime`)은 같은 피드백("시간뿐 아니라 날짜도
+함께")으로 도입 당일 폐기 — 상대 표기는 날짜를 가리므로 절대 표기로 대체, 함수·테스트 삭제.
 
 ## components/News.tsx = 컨테이너 + NewsView.tsx = 프레젠테이션 (+ News.css)
 
@@ -129,6 +127,11 @@ NewsView만 겨눈다.
 </div>
 ```
 
+- **페이지네이션(2026-08-08 사용자 피드백)**: 피드는 페이지당 **20건**(`PAGE_SIZE`),
+  목록 하단 중앙에 `‹ 1 2 3 4 ›` 버튼(`.news-pages`/`.news-page-btn`, 활성 = accent +
+  `aria-current="page"`, 양끝 화살표는 경계에서 disabled). 페이지 수가 1이면 미렌더.
+  탭 전환 시 1페이지로 리셋, 페이지 전환 시 탭 상단으로 `scrollIntoView`.
+  `initialPage?: number`(기본 1, 범위 밖은 클램프)는 테스트 주입용.
 - **탭 = aria-pressed 토글 버튼 2개**(검증 지적 — tabpanel·aria-controls·화살표 키보드
   내비게이션 없는 role="tab"은 반쪽 ARIA 패턴이라 생략보다 해롭다. 2개짜리 정렬 스위치는
   토글 버튼 선언이 정확): `props.initialTab?: 'major' | 'latest'`(기본 `'major'`)으로
