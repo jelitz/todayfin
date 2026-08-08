@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Summary } from './types'
 import Home from './components/Home'
+import News from './components/News'
 import About from './components/About'
 import Alsangmoo from './components/Alsangmoo'
 import Detail from './components/Detail'
@@ -41,7 +42,7 @@ function AppShell() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const showTicker = route.name === 'home' || route.name === 'detail'
+  const showTicker = route.name === 'home' || route.name === 'detail' || route.name === 'news'
 
   return (
     <div className={showTicker ? 'app-shell app-shell-ticker' : 'app-shell'}>
@@ -62,6 +63,12 @@ function AppShell() {
       )}
 
       <main className="app-main">
+        {route.name === 'news' && (
+          <ErrorBoundary key="news">
+            <News />
+          </ErrorBoundary>
+        )}
+
         {route.name === 'about' && (
           <ErrorBoundary key="about">
             <About />
