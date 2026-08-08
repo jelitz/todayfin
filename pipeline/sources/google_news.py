@@ -26,6 +26,40 @@ _UA = {
 }
 
 
+# 구글 피드의 <source>가 언론사명 대신 도메인·영문 표기로 오는 경우의 표시명 매핑
+# (2026-08-08 실측 표본 + 국내 주요 언론 도메인). 키는 소문자, 매핑에 없으면 원문 유지.
+_SOURCE_NAMES = {
+    "chosunbiz": "조선비즈",
+    "biz.chosun.com": "조선비즈",
+    "chosun.com": "조선일보",
+    "v.daum.net": "다음뉴스",
+    "news.naver.com": "네이버뉴스",
+    "n.news.naver.com": "네이버뉴스",
+    "mk.co.kr": "매일경제",
+    "hankyung.com": "한국경제",
+    "hani.co.kr": "한겨레",
+    "khan.co.kr": "경향신문",
+    "joongang.co.kr": "중앙일보",
+    "donga.com": "동아일보",
+    "yna.co.kr": "연합뉴스",
+    "etnews.com": "전자신문",
+    "mt.co.kr": "머니투데이",
+    "sedaily.com": "서울경제",
+    "edaily.co.kr": "이데일리",
+    "fnnews.com": "파이낸셜뉴스",
+    "news.jtbc.co.kr": "JTBC 뉴스",
+    "news.kbs.co.kr": "KBS 뉴스",
+    "ytn.co.kr": "YTN",
+    "technologyreview.kr": "MIT 테크놀로지 리뷰",
+}
+
+
+def _display_source(source: str | None) -> str | None:
+    if source is None:
+        return None
+    return _SOURCE_NAMES.get(source.lower(), source)
+
+
 def _clean_title(title: str, source: str | None) -> str:
     """구글 피드 제목 말미의 " - 출처명" 접미사를 제거한다(출처는 별도 필드로 표시)."""
     title = title.strip()
@@ -59,11 +93,17 @@ def parse_feed(xml_bytes: bytes, limit: int) -> list[dict]:
             # RFC 2822의 "-0000"은 naive로 반환됨 — 프런트가 로컬 시간으로 오해석하지 않게 UTC 부여
             dt = dt.replace(tzinfo=timezone.utc)
 
+        display = _display_source(source)
+        title = _clean_title(title_raw, source)
+        if display != source:
+            # "… - 조선비즈 - Chosunbiz"처럼 매핑 전 이름이 이중으로 붙는 표본 대응
+            title = _clean_title(title, display)
+
         items.append(
             {
-                "title": _clean_title(title_raw, source),
+                "title": title,
                 "url": url,
-                "source": source,
+                "source": display,
                 "published_at": dt.isoformat(),
             }
         )

@@ -70,6 +70,28 @@ def test_kst_offset_preserved():
     assert items[0]["published_at"] == "2026-08-08T10:32:24+09:00"
 
 
+def test_domain_source_mapped_to_press_name():
+    xml = _feed(_item("금값 상승 - mk.co.kr", source="mk.co.kr"))
+    items = google_news.parse_feed(xml, 5)
+    assert items[0]["source"] == "매일경제"
+    assert items[0]["title"] == "금값 상승"
+
+
+def test_double_suffix_stripped_when_source_mapped():
+    # 실측 표본: 제목에 "… - 조선비즈 - Chosunbiz"처럼 매핑 전후 이름이 이중으로 붙는 경우
+    xml = _feed(_item("강남 증여 셈법 - 조선비즈 - Chosunbiz", source="Chosunbiz"))
+    items = google_news.parse_feed(xml, 5)
+    assert items[0]["source"] == "조선비즈"
+    assert items[0]["title"] == "강남 증여 셈법"
+
+
+def test_unmapped_source_passthrough():
+    xml = _feed(_item("기사 - 오피니언뉴스", source="오피니언뉴스"))
+    items = google_news.parse_feed(xml, 5)
+    assert items[0]["source"] == "오피니언뉴스"
+    assert items[0]["title"] == "기사"
+
+
 def test_no_valid_items_raises():
     with pytest.raises(ValueError):
         google_news.parse_feed(_feed(_item("링크 없음", link="")), 5)
