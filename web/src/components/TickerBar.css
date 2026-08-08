@@ -1,9 +1,16 @@
+/* 2026-08-08 사용자 피드백: GNB 아래 고정 배치 → 화면 하단 부유(fixed)로 변경.
+   z-index는 상세 모달 오버레이(100)보다 아래. */
 .ticker-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   height: 34px;
   background: var(--surface);
-  border-bottom: 1px solid var(--hairline);
+  border-top: 1px solid var(--hairline);
   overflow: hidden;
 }
 
@@ -27,7 +34,9 @@
 .ticker-track {
   display: flex;
   white-space: nowrap;
-  animation: ticker-scroll 45s linear infinite;
+  /* 45s → 80s (2026-08-08 사용자 피드백): 지표 21종으로 트랙이 길어져 체감 속도가
+     빨라진 것을 상쇄하고 그보다 조금 더 느리게 */
+  animation: ticker-scroll 80s linear infinite;
 }
 
 .ticker-track:hover {

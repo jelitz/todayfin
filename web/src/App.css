@@ -4,6 +4,11 @@
   flex-direction: column;
 }
 
+/* 하단 고정 티커 바(34px+보더)가 푸터를 가리지 않도록 — 티커가 뜨는 라우트에서만 부여 */
+.app-shell-ticker {
+  padding-bottom: 35px;
+}
+
 .app-main {
   flex: 1 0 auto;
 }

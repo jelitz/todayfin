@@ -41,8 +41,10 @@ function AppShell() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  const showTicker = route.name === 'home' || route.name === 'detail'
+
   return (
-    <div className="app-shell">
+    <div className={showTicker ? 'app-shell app-shell-ticker' : 'app-shell'}>
       <Gnb
         tabs={GNB_TABS}
         activeRouteName={route.name === 'detail' ? 'home' : route.name}
@@ -50,7 +52,7 @@ function AppShell() {
         theme={theme}
         onToggleTheme={toggleTheme}
       />
-      {(route.name === 'home' || route.name === 'detail') && (
+      {showTicker && (
         <TickerBar
           summary={summary}
           onSelect={(id) => {
